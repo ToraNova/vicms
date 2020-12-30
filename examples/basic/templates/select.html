@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block title %}{% endblock %}
+{% block header %}{% endblock %}
+
+{% block content %}
+{% for d in data %}
+<p>{{ d.id }}: {{ d.name }}</p><a href="{{ url_for('personrec.update', id = d.id ) }}">update record</a>
+{% endfor %}
+{% endblock %}

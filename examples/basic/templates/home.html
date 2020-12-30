@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}{% endblock %}
+{% block header %}{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('personrec.insert') }}">insert new person record</a>
+<a href="{{ url_for('personrec.select') }}">view person record</a>
+{% endblock %}
