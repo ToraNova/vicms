@@ -1,5 +1,5 @@
 from setuptools import find_packages, setup
-from viauth.vial import name, description, version
+from vicms.vial import name, description, version
 
 setup(
     name=name,
