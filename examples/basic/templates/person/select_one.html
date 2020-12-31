@@ -6,5 +6,5 @@
 {% block content %}
 <h1>{{ data.name }}</h1>
 <p>id: {{ data.id }}</p>
-<a href="{{ url_for('personrec.delete', id = data.id) }}">delete</a>
+<a href="{{ url_for('vicms.delete', content='personrec', id = data.id) }}">delete</a>
 {% endblock %}

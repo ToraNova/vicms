@@ -5,28 +5,65 @@ to run:
 export FLASK_APP=basic
 flask run
 '''
+from datetime import datetime
 from flask import Flask, render_template, redirect, url_for
-from vicms.basic import Arch
-from vicms import sqlorm
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from vicms.basic import Arch, ViContent
+from vicms import sqlorm, ArbException
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 
 class PersonRecord(sqlorm.ViCMSBase):
     '''an example content class that can be used by the cms library'''
     __tablename__ = "personrec"
     id = Column(Integer, primary_key = True)
     name = Column(String(50),unique=True,nullable=False)
-    birthdate =  Column(DateTime(),unique=False, nullable=True)
+    birthdate = Column(DateTime(),unique=False, nullable=True)
+
+    def strdate(self):
+        return '' if not self.birthdate else self.birthdate.strftime("%Y-%m-%d")
 
     # this is called on insertion, decide what to insert and how based on form
     # this is in a try-catch block, raise an exception to abort if necessary
     def __init__(self, reqform):
-        self.name = reqform.get("name")
-        self.birthdate = None # null
+        self.update(reqform)
 
     # this is called on update, decide what to change and how based on form
     # this is in a try-catch block, raise an exception to abort if necessary
     def update(self, reqform):
         self.name = reqform.get("name")
+        self.birthdate = datetime.strptime(reqform.get("birthdate"),"%Y-%m-%d")
+
+    # this is called before deletion
+    # this is in a try-catch block, raise an exception to abort if necessary
+    def delete(self):
+        pass
+
+class PairRecord(sqlorm.ViCMSBase):
+    __tablename__ = "pairrec"
+    id = Column(Integer, primary_key = True)
+    aid = Column(Integer, ForeignKey('personrec.id'), nullable=True)
+    bid = Column(Integer, ForeignKey('personrec.id'), nullable=True)
+    aperson = relationship("PersonRecord", foreign_keys=[aid])
+    bperson = relationship("PersonRecord", foreign_keys=[bid])
+
+    # this is called on insertion GETs, a variable form_data is returned to jinja to help
+    # dynamic form creation (if necessary, can be left out)
+    def formgen_assist(session):
+        p = PersonRecord.query.all()
+        return p if p else []
+
+    # this is called on insertion, decide what to insert and how based on form
+    # this is in a try-catch block, raise an exception to abort if necessary
+    def __init__(self, reqform):
+        self.update(reqform)
+
+    # this is called on update, decide what to change and how based on form
+    # this is in a try-catch block, raise an exception to abort if necessary
+    def update(self, reqform):
+        self.aid = reqform.get("aid")
+        self.bid = reqform.get("bid")
+        if(self.aid == self.bid):
+            raise ArbException("a person may not pair with themself")
 
     # this is called before deletion
     # this is in a try-catch block, raise an exception to abort if necessary
@@ -44,29 +81,34 @@ def create_app(test_config=None):
     # create table
     try:
         PersonRecord.create_table(app.config['DBURI'])
+        PairRecord.create_table(app.config['DBURI'])
     except Exception as e:
         # ignore if table already exist
         #print(e)
         pass
 
-    # define a place to find the templates
-    # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with viauth
-    arch = Arch(
-        app.config['DBURI'], PersonRecord,
+    c1 = ViContent( PersonRecord,
         templates = {
-            'select':'select.html',
-            'select_one':'select_one.html',
-            'insert':'insert.html',
-            'update':'update.html'
+            'select':'person/select.html',
+            'select_one':'person/select_one.html',
+            'insert':'person/insert.html',
+            'update':'person/update.html'
+        }
+    )
+    c2 = ViContent( PairRecord,
+        templates = {
+            'select':'pair/select.html',
+            'select_one':'pair/select_one.html',
+            'insert':'pair/insert.html',
+            'update':'pair/update.html'
         },
-        reroutes = {
-            'insert':'select',
-            'update':'select',
-            'delete':'select'
-        },
-        url_prefix = '/'
+        home_route = 'vicms.select',
+        content = 'self'
     )
 
+    # define a place to find the templates
+    # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with viauth
+    arch = Arch( app.config['DBURI'], [c1, c2], url_prefix = '/')
     arch.init_app(app)
 
     @app.route('/')

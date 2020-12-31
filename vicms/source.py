@@ -4,9 +4,9 @@ from collections import namedtuple
 
 AppArch = namedtuple('AppArch', ['bp'])
 
-def make_blueprint(content_name, prefix=None):
+def make_blueprint(prefix=None):
     prefix = prefix if prefix else vial.name
-    bp = Blueprint(content_name, __name__, url_prefix='/%s/%s'%(prefix,content_name))
+    bp = Blueprint(vial.name, __name__, url_prefix=prefix)
 
     @bp.route('/about', methods=['GET'])
     def about():

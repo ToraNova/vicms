@@ -50,6 +50,9 @@ class ViCMSBase(Base):
     __abstract__ = True
     __tablename__ = "vicmsbase"
 
+    def formgen_assist(session):
+        return []
+
     @classmethod
     def create_table(cls, dburi):
         engine = make_engine(dburi)

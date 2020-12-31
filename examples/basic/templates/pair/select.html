@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}{% endblock %}
+{% block header %}{% endblock %}
+
+{% block content %}
+{% for d in data %}
+<p>{{ d.id }}: {{ d.aperson.name }} {{ d.bperson.name }}</p>
+<a href="{{ url_for('vicms.select_one', content = 'pairrec', id = d.id ) }}">view record</a>
+<a href="{{ url_for('vicms.update', content = 'pairrec', id = d.id ) }}">update record</a>
+{% endfor %}
+</br>
+<a href="{{ url_for('vicms.insert', content = 'pairrec' ) }}">insert record</a>
+<a href="{{ url_for('root' ) }}">back to root</a>
+{% endblock %}

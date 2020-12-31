@@ -6,7 +6,9 @@
 {% block content %}
 <form method="post">
 	<label>name</label></br>
-	<input name="name" value="{{data.name}}" required></br>
-	<button type="submit">update</button>
+	<input name="name" required></br>
+	<label>birthdate</label></br>
+	<input type="date" name="birthdate" required></br>
+	<button type="submit">insert</button>
 </form>
 {% endblock %}

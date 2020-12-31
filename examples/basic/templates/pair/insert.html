@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}{% endblock %}
+{% block header %}{% endblock %}
+
+{% block content %}
+<form method="post">
+	<label>a's id</label></br>
+	<select name="aid" required>
+		{% for f in form %}
+		<option value="{{f.id}}">{{ f.name }}</option>
+		{% endfor %}
+	</select>
+
+	</br>
+
+	<label>b's id</label></br>
+	<select name="bid" required>
+		{% for f in form %}
+		<option value="{{f.id}}">{{ f.name }}</option>
+		{% endfor %}
+	</select>
+
+	</br>
+	<button type="submit">insert</button>
+</form>
+{% endblock %}

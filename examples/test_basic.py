@@ -1,52 +1,59 @@
+import os
+import tempfile
 import pytest
 
-from examples.basic import create_app
+from examples import basic
 
 @pytest.fixture
 def app():
     """Create and configure a new app instance for each test."""
-    app = create_app({"TESTING": True})
+    db_fd, db_file = tempfile.mkstemp()
+    db_uri = 'sqlite:///%s' % db_file
+    app = basic.create_app({"TESTING": True, "DBURI": db_uri})
 
     # create the database and load test data
     with app.app_context():
         pass
-
     yield app
+
+    # close and remove the temporary database
+    os.close(db_fd)
+    os.unlink(db_file)
 
 @pytest.fixture
 def client(app):
     """A test client for the app."""
     return app.test_client()
 
-def test_redirect(client):
-    '''test redirect on protected route'''
+def test_case(client):
+
     rv = client.get('/')
-    assert b'You should be redirected automatically to target URL: <a href="/basic_example/login">' in rv.data
+    assert b'href="/personrec/"' in rv.data
+    assert b'href="/pairrec/"' in rv.data
 
-def login(client, username, password):
-    return client.post('/basic_example/login', data=dict(
-        username=username,
-        password=password
-    ), follow_redirects=True)
+    rv = client.get('/personrec/insert')
+    assert rv.status_code == 200
+    rv = client.get('/pairrec/insert')
+    assert rv.status_code == 200
 
-def logout(client):
-    return client.get('/basic_example/logout', follow_redirects=True)
+    rv = client.post('/personrec/insert', data=dict(name="jason",birthdate="1996-06-26"), follow_redirects=True)
+    rv = client.post('/personrec/insert', data=dict(name="ting",birthdate="1996-10-02"), follow_redirects=True)
+    assert b'jason, 1996-06-26' in rv.data
+    assert b'ting, 1996-10-02' in rv.data
 
-def test_login_logout(client):
-    '''test login and logout'''
+    rv = client.get('/personrec/1')
+    assert b'<h1>jason</h1>' in rv.data
 
-    rv = login(client, "john", "test123")
-    assert b'hello john, you are authenticated' in rv.data
+    rv = client.post('/pairrec/insert', data=dict(aid="1",bid="2"), follow_redirects=True)
+    assert b'jason ting' in rv.data
 
-    rv = logout(client)
-    assert b'<input name="username" required>' in rv.data
-    assert b'<input name="password" type="password" required>' in rv.data
+    rv = client.post('/pairrec/update/1', data=dict(aid="1", bid="1"), follow_redirects=True)
+    assert b'exception (ArbException)' in rv.data
 
-    rv = login(client, "john", "test1234")
-    assert b'invalid credentials' in rv.data
+    rv = client.get('/pairrec/')
+    assert b'jason ting' in rv.data
 
-    rv = login(client, "alice", "hello")
-    assert b'invalid credentials' in rv.data
+    rv = client.post('/personrec/update/2', data=dict(name="tiff", birthdate="1996-12-22"), follow_redirects=True)
 
-    rv = login(client, "alice", None)
-    assert rv.status_code == 400
+    rv = client.get('/pairrec/1')
+    assert b'jason' in rv.data and b'tiff' in rv.data

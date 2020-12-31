@@ -4,6 +4,9 @@
 {% block header %}{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('personrec.insert') }}">insert new person record</a>
-<a href="{{ url_for('personrec.select') }}">view person record</a>
+<a href="{{ url_for('vicms.insert', content='personrec') }}">insert new person record</a>
+<a href="{{ url_for('vicms.select', content='personrec') }}">view person record</a>
+</br>
+<a href="{{ url_for('vicms.insert', content='pairrec') }}">insert new pair record</a>
+<a href="{{ url_for('vicms.select', content='pairrec') }}">view pair record</a>
 {% endblock %}
