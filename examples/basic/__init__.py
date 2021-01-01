@@ -87,6 +87,7 @@ def create_app(test_config=None):
         #print(e)
         pass
 
+    # define a place to find the templates and the content sqlorm class
     c1 = ViContent( PersonRecord,
         templates = {
             'select':'person/select.html',
@@ -106,8 +107,7 @@ def create_app(test_config=None):
         content = 'self'
     )
 
-    # define a place to find the templates
-    # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with viauth
+    # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms
     arch = Arch( app.config['DBURI'], [c1, c2], url_prefix = '/')
     arch.init_app(app)
 

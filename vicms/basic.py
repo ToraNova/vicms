@@ -6,6 +6,12 @@ supports multiple content per arch
 from flask import render_template, request, redirect, abort, flash, url_for
 from vicms import source, sqlorm
 
+'''
+basic.ViContent Arch
+templates: select, select_one, insert, update
+content_home: redirect to content_home after insert, update, delete
+set content='self' to redirect to the content's home (default behavior)
+'''
 class ViContent:
     def __init__(self, content_class,
             templates = {
@@ -14,22 +20,23 @@ class ViContent:
                 'insert':'insert.html',
                 'update':'update.html'
             },
-            home_route = 'vicms.select',
-            **home_route_kwargs
+            content_home = 'vicms.select',
+            **content_home_kwargs
         ):
         '''initialize the content structure. a content structure is used by an arch
         to easily create routes
         '''
+        assert templates['select'] and templates['select_one'] and templates['insert'] and templates['update']
         self.__templ = templates
 
         assert issubclass(content_class, sqlorm.Base)
         self.__contentclass = content_class
         self.session = None
 
-        self.__homeroute = home_route
-        if not home_route_kwargs.get('content') or home_route_kwargs.get('content') == 'self':
-            home_route_kwargs['content'] = self.get_tablename()
-        self.__homerouteargs = home_route_kwargs
+        self.__contenthome = content_home
+        if not content_home_kwargs.get('content') or content_home_kwargs.get('content') == 'self':
+            content_home_kwargs['content'] = self.get_tablename()
+        self.__contenthome_kwargs = content_home_kwargs
 
     def _set_session(self, session):
         self.session = session
@@ -37,8 +44,8 @@ class ViContent:
     def get_tablename(self):
         return self.__contentclass.__tablename__
 
-    def __route_home(self):
-        return redirect(url_for(self.__homeroute, **self.__homerouteargs))
+    def __content_home(self):
+        return redirect(url_for(self.__contenthome, **self.__contenthome_kwargs))
 
     def select(self):
         call = self.__contentclass.query.all()
@@ -55,7 +62,7 @@ class ViContent:
                 self.session.add(new)
                 self.session.commit()
                 source.sflash('successfully inserted')
-                return self.__route_home()
+                return self.__content_home()
             except Exception as e:
                 self.session.rollback()
                 source.eflash(e)
@@ -69,7 +76,7 @@ class ViContent:
                 targ.update(request.form)
                 self.session.add(targ)
                 self.session.commit()
-                return self.__route_home()
+                return self.__content_home()
             except Exception as e:
                 self.session.rollback()
                 source.eflash(e)
@@ -85,7 +92,7 @@ class ViContent:
         except Exception as e:
             self.session.rollback()
             source.eflash(e)
-        return self.__route_home()
+        return self.__content_home()
 
 class Arch:
     def __init__(self, dburi, contents, url_prefix = None):
