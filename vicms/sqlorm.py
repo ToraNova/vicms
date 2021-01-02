@@ -11,7 +11,7 @@
 
 import datetime
 from collections import namedtuple
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine, MetaData, inspect
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, DateTime
@@ -51,10 +51,21 @@ class ViCMSBase(Base):
     __tablename__ = "vicmsbase"
 
     def formgen_assist(session):
-        return []
+        return None
 
+    def select_assist(self):
+        return None
+
+    # create table if not exist on dburi
     @classmethod
     def create_table(cls, dburi):
         engine = make_engine(dburi)
-        cls.__table__.create(engine)
+        cls.__table__.create(engine, checkfirst=True)
         engine.dispose() #house keeping
+
+    # check if table exists in dburi
+    @classmethod
+    def table_exists(cls, dburi):
+        engine = make_engine(dburi)
+        ins = inspect(engine)
+        return cls.__tablename__ in ins.get_table_names()

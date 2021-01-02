@@ -22,6 +22,11 @@ class PersonRecord(sqlorm.ViCMSBase):
     def strdate(self):
         return '' if not self.birthdate else self.birthdate.strftime("%Y-%m-%d")
 
+    # this is called on select/select_one routes to provide auxliary data
+    # the provided value can be accessed from the 'auxd' variable
+    def select_assist(self):
+        return None
+
     # this is called on insertion, decide what to insert and how based on form
     # this is in a try-catch block, raise an exception to abort if necessary
     def __init__(self, reqform):

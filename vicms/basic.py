@@ -5,6 +5,7 @@ supports multiple content per arch
 
 from flask import render_template, request, redirect, abort, flash, url_for
 from vicms import source, sqlorm
+from sqlalchemy.exc import IntegrityError
 
 '''
 basic.ViContent Arch
@@ -49,11 +50,15 @@ class ViContent:
 
     def select(self):
         call = self.__contentclass.query.all()
-        return render_template(self.__templ['select'], data = call)
+        auxd = []
+        for c in call:
+            auxd.append(c.select_assist())
+        return render_template(self.__templ['select'], data = call, auxd = auxd)
 
     def select_one(self,id):
         cone = self.__contentclass.query.filter(self.__contentclass.id == id).first()
-        return render_template(self.__templ['select_one'], data = cone)
+        auxd = cone.select_assist()
+        return render_template(self.__templ['select_one'], data = cone, auxd = auxd)
 
     def insert(self):
         if request.method == 'POST':
@@ -63,6 +68,9 @@ class ViContent:
                 self.session.commit()
                 source.sflash('successfully inserted')
                 return self.__content_home()
+            except IntegrityError as e:
+                self.session.rollback()
+                source.emflash('integrity error')
             except Exception as e:
                 self.session.rollback()
                 source.eflash(e)
@@ -76,7 +84,11 @@ class ViContent:
                 targ.update(request.form)
                 self.session.add(targ)
                 self.session.commit()
+                source.sflash('successfully updated')
                 return self.__content_home()
+            except IntegrityError as e:
+                self.session.rollback()
+                source.emflash('integrity error')
             except Exception as e:
                 self.session.rollback()
                 source.eflash(e)
