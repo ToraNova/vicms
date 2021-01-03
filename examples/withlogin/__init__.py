@@ -11,7 +11,7 @@ flask run
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, request
 from flask_login import login_user, LoginManager, current_user, logout_user, UserMixin
-from vicms.withlogin import Arch, ViContent
+from vicms.basic.withlogin import Arch, ViContent
 from vicms import sqlorm, ArbException
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
