@@ -9,36 +9,49 @@ from flask import render_template, request, redirect, abort, flash, url_for
 from vicms import source, sqlorm, basic
 from flask_login import current_user, login_required
 
+class ViContent(basic.ViContent):
+
+    @login_required
+    def __select(self):
+        return super().select()
+
+    @login_required
+    def __select_one(self, id):
+        return super().select_one(id)
+
+    @login_required
+    def __insert(self):
+        return super().insert()
+
+    @login_required
+    def __update(self, id):
+        return super().update(id)
+
+    @login_required
+    def __delete(self, id):
+        return super().delete(id)
+
+    def __init__(self, content_class,
+            login_not_required = [],
+            templates = {
+                'select':'select.html',
+                'select_one':'select_one.html',
+                'insert':'insert.html',
+                'update':'update.html'
+            },
+            content_home = 'vicms.select',
+            **content_home_kwargs
+        ):
+        super().__init__(content_class, templates, content_home, **content_home_kwargs)
+
+        # set login_required paths
+        for k in ['select', 'select_one', 'insert', 'update', 'delete']:
+            if k not in login_not_required:
+                setattr(self, k, getattr(self, '_ViContent__'+k))
+
 class Arch(basic.Arch):
     def __init__(self, dburi, contents, url_prefix = None):
         super().__init__(dburi, contents, url_prefix)
 
     def generate(self):
-        bp = source.make_blueprint(self.__urlprefix)
-
-        @bp.route('/<content>/', methods=['GET'])
-        @login_required
-        def select(content):
-            return self.contents[content].select()
-
-        @bp.route('/<content>/<id>', methods=['GET'])
-        @login_required
-        def select_one(content,id):
-            return self.contents[content].select_one(id)
-
-        @bp.route('/<content>/insert', methods=['GET','POST'])
-        @login_required
-        def insert(content):
-            return self.contents[content].insert()
-
-        @bp.route('/<content>/update/<id>', methods=['GET','POST'])
-        @login_required
-        def update(content,id):
-            return self.contents[content].update(id)
-
-        @bp.route('/<content>/delete/<id>')
-        @login_required
-        def delete(content,id):
-            return self.contents[content].delete(id)
-
-        return source.AppArch(bp)
+        return super().generate()
