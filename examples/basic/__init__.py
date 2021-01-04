@@ -12,7 +12,7 @@ from vicms import sqlorm, ArbException
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
-class PersonRecord(sqlorm.ViCMSBase):
+class PersonRecord(sqlorm.ViCMSBase, sqlorm.Base):
     '''an example content class that can be used by the cms library'''
     __tablename__ = "personrec"
     id = Column(Integer, primary_key = True)
@@ -43,7 +43,7 @@ class PersonRecord(sqlorm.ViCMSBase):
     def delete(self):
         pass
 
-class PairRecord(sqlorm.ViCMSBase):
+class PairRecord(sqlorm.ViCMSBase, sqlorm.Base):
     __tablename__ = "pairrec"
     id = Column(Integer, primary_key = True)
     aid = Column(Integer, ForeignKey('personrec.id'), nullable=True)

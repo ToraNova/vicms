@@ -46,9 +46,7 @@ def connect(dburi):
     engine = make_engine(dburi)
     return make_session(engine)
 
-class ViCMSBase(Base):
-    __abstract__ = True
-    __tablename__ = "vicmsbase"
+class ViCMSBase:
 
     def formgen_assist(session):
         return None
