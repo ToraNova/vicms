@@ -68,4 +68,6 @@ class ViCMSBase(Base):
     def table_exists(cls, dburi):
         engine = make_engine(dburi)
         ins = inspect(engine)
-        return cls.__tablename__ in ins.get_table_names()
+        res = cls.__tablename__ in ins.get_table_names()
+        engine.dispose()
+        return res

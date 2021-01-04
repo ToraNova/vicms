@@ -14,21 +14,20 @@ content_home: redirect to content_home after insert, update, delete
 set content='self' to redirect to the content's home (default behavior)
 '''
 class ViContent:
+
     def __init__(self, content_class,
-            templates = {
-                'select':'select.html',
-                'select_one':'select_one.html',
-                'insert':'insert.html',
-                'update':'update.html'
-            },
+            templates = {},
             content_home = 'vicms.select',
             **content_home_kwargs
         ):
         '''initialize the content structure. a content structure is used by an arch
         to easily create routes
         '''
-        assert templates['select'] and templates['select_one'] and templates['insert'] and templates['update']
         self.__templ = templates
+        self.__default_tp('insert','insert.html')
+        self.__default_tp('select','select.html')
+        self.__default_tp('select_one','select_one.html')
+        self.__default_tp('update','update.html')
 
         assert issubclass(content_class, sqlorm.Base)
         self.__contentclass = content_class
@@ -38,6 +37,10 @@ class ViContent:
         if not content_home_kwargs.get('content') or content_home_kwargs.get('content') == 'self':
             content_home_kwargs['content'] = self.get_tablename()
         self.__contenthome_kwargs = content_home_kwargs
+
+    def __default_tp(self, key, value):
+        if not self.__templ.get(key):
+            self.__templ[key] = value
 
     def _set_session(self, session):
         self.session = session
@@ -114,7 +117,6 @@ class Arch:
         for c in contents:
             assert isinstance(c, ViContent)
             self.contents[c.get_tablename()] = c
-            self.contents[c.get_tablename()]._set_session(self.session)
             self.contents[c.get_tablename()]._set_session(self.session)
 
     def init_app(self, app):

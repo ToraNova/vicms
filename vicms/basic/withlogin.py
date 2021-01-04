@@ -4,7 +4,6 @@ used with flask-login
 this can be used with viauth
 supports multiple content per arch
 '''
-
 from flask import render_template, request, redirect, abort, flash, url_for
 from vicms import source, sqlorm
 from vicms.basic import basic
@@ -34,12 +33,7 @@ class ViContent(basic.ViContent):
 
     def __init__(self, content_class,
             login_not_required = [],
-            templates = {
-                'select':'select.html',
-                'select_one':'select_one.html',
-                'insert':'insert.html',
-                'update':'update.html'
-            },
+            templates = {},
             content_home = 'vicms.select',
             **content_home_kwargs
         ):
