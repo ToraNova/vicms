@@ -12,7 +12,7 @@ from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, request
 from flask_login import login_user, LoginManager, current_user, logout_user, UserMixin
 from vicms.basic.withlogin import Arch, ViContent
-from vicms import sqlorm, ArbException
+from vicms import sqlorm
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from examples.basic import PersonRecord, PairRecord
@@ -57,8 +57,6 @@ def create_app(test_config=None):
             'insert':'pair/insert.html',
             'update':'pair/update.html'
         },
-        home_route = 'vicms.select',
-        content = 'self'
     )
 
     # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms

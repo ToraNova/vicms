@@ -18,7 +18,8 @@ class ViContent:
     def __init__(self, content_class,
             templates = {},
             content_home = 'vicms.select',
-            **content_home_kwargs
+            content_home_kwargs = {},
+            routes_disabled = []
         ):
         '''initialize the content structure. a content structure is used by an arch
         to easily create routes
@@ -30,6 +31,7 @@ class ViContent:
         self.__default_tp('update','update.html')
 
         assert issubclass(content_class, sqlorm.Base)
+        assert issubclass(content_class, sqlorm.ViCMSBase)
         self.__contentclass = content_class
         self.session = None
 
@@ -37,6 +39,34 @@ class ViContent:
         if not content_home_kwargs.get('content') or content_home_kwargs.get('content') == 'self':
             content_home_kwargs['content'] = self.get_tablename()
         self.__contenthome_kwargs = content_home_kwargs
+        self.__callbacks = {
+                'err': lambda msg : flash(msg, 'err'),
+                'ok': lambda msg : flash(msg, 'ok'),
+                'warn': lambda msg : flash(msg, 'warn'),
+                'ex': lambda ex : flash("an exception (%s) has occurred: %s" % (type(ex).__name__, str(ex)), 'err'),
+        }
+
+        for route in ['insert', 'select', 'select_one', 'update']:
+            if route in routes_disabled:
+                setattr(self, route, lambda *arg : abort(404))
+
+    def set_callback(self, event, cbfunc):
+        if not callable(cbfunc):
+            raise TypeError("callback function should be callable")
+        self.__callbacks[event] = cbfunc
+
+    def callback(self, event, *args):
+        return self.__callbacks[event](*args)
+
+    # convenience functions
+    def error(self, msg):
+        self.callback('err', msg)
+
+    def ok(self, msg):
+        self.callback('ok', msg)
+
+    def ex(self, e):
+        self.callback('ex', e)
 
     def __default_tp(self, key, value):
         if not self.__templ.get(key):
@@ -64,39 +94,41 @@ class ViContent:
         return render_template(self.__templ['select_one'], data = cone, auxd = auxd)
 
     def insert(self):
+        rscode = 200
         if request.method == 'POST':
             try:
                 new = self.__contentclass(request.form)
                 self.session.add(new)
                 self.session.commit()
-                source.sflash('successfully inserted')
+                self.ok('successfully inserted')
                 return self.__content_home()
             except IntegrityError as e:
-                self.session.rollback()
-                source.emflash('integrity error')
+                self.error('integrity error')
+                rscode = 409
             except Exception as e:
-                self.session.rollback()
-                source.eflash(e)
+                self.ex(e)
+            self.session.rollback()
         form = self.__contentclass.formgen_assist(self.session)
-        return render_template(self.__templ['insert'], form = form)
+        return render_template(self.__templ['insert'], form = form), rscode
 
     def update(self,id):
+        rscode = 200
         targ = self.__contentclass.query.filter(self.__contentclass.id == id).first()
         if request.method == 'POST':
             try:
                 targ.update(request.form)
                 self.session.add(targ)
                 self.session.commit()
-                source.sflash('successfully updated')
+                self.ok('successfully updated')
                 return self.__content_home()
             except IntegrityError as e:
-                self.session.rollback()
-                source.emflash('integrity error')
+                self.error('integrity error')
+                rscode = 409
             except Exception as e:
-                self.session.rollback()
-                source.eflash(e)
+                self.ex(e)
+            self.session.rollback()
         form = self.__contentclass.formgen_assist(self.session)
-        return render_template(self.__templ['update'], data = targ, form = form)
+        return render_template(self.__templ['update'], data = targ, form = form), rscode
 
     def delete(self,id):
         targ = self.__contentclass.query.filter(self.__contentclass.id == id).first()

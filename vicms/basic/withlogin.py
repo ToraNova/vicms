@@ -35,9 +35,10 @@ class ViContent(basic.ViContent):
             login_not_required = [],
             templates = {},
             content_home = 'vicms.select',
-            **content_home_kwargs
+            content_home_kwargs = {},
+            routes_disabled = []
         ):
-        super().__init__(content_class, templates, content_home, **content_home_kwargs)
+        super().__init__(content_class, templates, content_home, content_home_kwargs, routes_disabled)
 
         # set login_required paths
         for k in ['select', 'select_one', 'insert', 'update', 'delete']:

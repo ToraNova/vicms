@@ -8,7 +8,7 @@ flask run
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for
 from vicms.basic import Arch, ViContent
-from vicms import sqlorm, ArbException
+from vicms import sqlorm
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -68,7 +68,7 @@ class PairRecord(sqlorm.ViCMSBase, sqlorm.Base):
         self.aid = reqform.get("aid")
         self.bid = reqform.get("bid")
         if(self.aid == self.bid):
-            raise ArbException("a person may not pair with themself")
+            raise Exception("a person may not pair with themself")
 
     # this is called before deletion
     # this is in a try-catch block, raise an exception to abort if necessary
@@ -108,8 +108,8 @@ def create_app(test_config=None):
             'insert':'pair/insert.html',
             'update':'pair/update.html'
         },
-        home_route = 'vicms.select',
-        content = 'self'
+        content_home = 'vicms.select',
+        content_home_kwargs = {'content': 'self' }
     )
 
     # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms

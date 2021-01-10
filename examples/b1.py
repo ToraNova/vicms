@@ -36,8 +36,8 @@ def test_case(client):
     rv = client.get('/pairrec/insert')
     assert rv.status_code == 200
 
-    rv = client.post('/personrec/insert', data=dict(name="jason",birthdate="1996-06-26"), follow_redirects=True)
-    rv = client.post('/personrec/insert', data=dict(name="ting",birthdate="1996-10-02"), follow_redirects=True)
+    rv = client.post('/personrec/insert', data=dict(name="jason", birthdate="1996-06-26"), follow_redirects=True)
+    rv = client.post('/personrec/insert', data=dict(name="ting", birthdate="1996-10-02"), follow_redirects=True)
     assert b'jason, 1996-06-26' in rv.data
     assert b'ting, 1996-10-02' in rv.data
 
@@ -48,12 +48,12 @@ def test_case(client):
     assert b'jason ting' in rv.data
 
     rv = client.post('/pairrec/update/1', data=dict(aid="1", bid="1"), follow_redirects=True)
-    assert b'exception (ArbException)' in rv.data
+    assert b'a person may not pair with themself' in rv.data
 
     rv = client.get('/pairrec/')
     assert b'jason ting' in rv.data
 
-    rv = client.post('/personrec/update/2', data=dict(name="tiff", birthdate="1996-12-22"), follow_redirects=True)
+    rv = client.post('/personrec/update/2', data=dict(name="ting2", birthdate="1996-10-02"), follow_redirects=True)
 
     rv = client.get('/pairrec/1')
-    assert b'jason' in rv.data and b'tiff' in rv.data
+    assert b'jason' in rv.data and b'ting2' in rv.data
