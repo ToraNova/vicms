@@ -30,7 +30,7 @@ class ViContent:
         self.__default_tp('select_one','select_one.html')
         self.__default_tp('update','update.html')
 
-        assert issubclass(content_class, sqlorm.Base)
+        #assert issubclass(content_class, sqlorm.Base) # could be initialized from an alternative base
         assert issubclass(content_class, sqlorm.ViCMSBase)
         self.__contentclass = content_class
         self.session = None
