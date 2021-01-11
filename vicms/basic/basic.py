@@ -142,10 +142,10 @@ class ViContent:
         return self.__content_home()
 
 class Arch:
-    def __init__(self, dburi, contents, url_prefix = None):
+    def __init__(self, dburi, contents, dbase = sqlorm.Base, url_prefix = None):
         self.contents = {}
         self.__urlprefix = url_prefix
-        self.session = sqlorm.connect(dburi)
+        self.session = sqlorm.connect(dburi, dbase)
         for c in contents:
             assert isinstance(c, ViContent)
             self.contents[c.get_tablename()] = c

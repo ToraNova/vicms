@@ -11,8 +11,12 @@ from vicms.basic import Arch, ViContent
 from vicms import sqlorm
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
 
-class PersonRecord(sqlorm.ViCMSBase, sqlorm.Base):
+# example of using another declarative_base class
+Base = declarative_base()
+
+class PersonRecord(sqlorm.ViCMSBase, Base):
     '''an example content class that can be used by the cms library'''
     __tablename__ = "personrec"
     id = Column(Integer, primary_key = True)
@@ -43,7 +47,7 @@ class PersonRecord(sqlorm.ViCMSBase, sqlorm.Base):
     def delete(self):
         pass
 
-class PairRecord(sqlorm.ViCMSBase, sqlorm.Base):
+class PairRecord(sqlorm.ViCMSBase, Base):
     __tablename__ = "pairrec"
     id = Column(Integer, primary_key = True)
     aid = Column(Integer, ForeignKey('personrec.id'), nullable=True)
@@ -113,7 +117,7 @@ def create_app(test_config=None):
     )
 
     # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms
-    arch = Arch( app.config['DBURI'], [c1, c2], url_prefix = '/')
+    arch = Arch( app.config['DBURI'], [c1, c2], dbase = Base, url_prefix = '/')
     arch.init_app(app)
 
     @app.route('/')

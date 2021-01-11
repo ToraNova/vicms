@@ -17,34 +17,27 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, DateTime
 
 DBstruct = namedtuple("DBstruct", ["engine","metadata","session","base"])
-Base = declarative_base()
+Base = declarative_base() # use this if user don't declare their own declarative_base
 
-def make_dbstruct(dburi):
+def make_dbstruct(dburi, base = Base):
     '''deprecated, but kept for references'''
     engine = create_engine(dburi)
     metadata = MetaData(bind=engine)
-    session = make_session(engine)
+    session = make_session(engine, base)
     base = declarative_base()
     base.query = session.query_property()
     return DBstruct(engine, metadata, session, base)
 
-def make_session(engine):
+def make_session(engine, base = Base):
     '''create a session and bind the Base query property to it'''
     sess =  scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=engine))
-    global Base
-    Base.query = sess.query_property()
+    base.query = sess.query_property()
     return sess
 
-def make_engine(dburi):
-    '''create an engine based on an uri
-    if the engine does not persist and a new one will be created sooner, call the
-    Engine.dispose() method'''
-    return create_engine(dburi)
-
-def connect(dburi):
+def connect(dburi, base = Base):
     '''easy function to connect to a database, returns a session'''
-    engine = make_engine(dburi)
-    return make_session(engine)
+    engine = create_engine(dburi)
+    return make_session(engine, base)
 
 class ViCMSBase:
 
@@ -57,14 +50,14 @@ class ViCMSBase:
     # create table if not exist on dburi
     @classmethod
     def create_table(cls, dburi):
-        engine = make_engine(dburi)
+        engine = create_engine(dburi)
         cls.__table__.create(engine, checkfirst=True)
         engine.dispose() #house keeping
 
     # check if table exists in dburi
     @classmethod
     def table_exists(cls, dburi):
-        engine = make_engine(dburi)
+        engine = create_engine(dburi)
         ins = inspect(engine)
         res = cls.__tablename__ in ins.get_table_names()
         engine.dispose()

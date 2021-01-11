@@ -46,8 +46,8 @@ class ViContent(basic.ViContent):
                 setattr(self, k, getattr(self, '_ViContent__'+k))
 
 class Arch(basic.Arch):
-    def __init__(self, dburi, contents, url_prefix = None):
-        super().__init__(dburi, contents, url_prefix)
+    def __init__(self, dburi, contents, dbase = sqlorm.Base, url_prefix = None):
+        super().__init__(dburi, contents, dbase, url_prefix)
 
     def generate(self):
         return super().generate()
