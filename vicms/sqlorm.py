@@ -17,9 +17,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, DateTime
 
 DBstruct = namedtuple("DBstruct", ["engine","metadata","session","base"])
-Base = declarative_base() # use this if user don't declare their own declarative_base
+#Base = declarative_base() # removed since v0.1.2, force user to use their own declarative base
 
-def make_dbstruct(dburi, base = Base):
+def make_dbstruct(dburi, base):
     '''deprecated, but kept for references'''
     engine = create_engine(dburi)
     metadata = MetaData(bind=engine)
@@ -28,13 +28,13 @@ def make_dbstruct(dburi, base = Base):
     base.query = session.query_property()
     return DBstruct(engine, metadata, session, base)
 
-def make_session(engine, base = Base):
+def make_session(engine, base):
     '''create a session and bind the Base query property to it'''
     sess =  scoped_session(sessionmaker(autocommit=False,autoflush=False,bind=engine))
     base.query = sess.query_property()
     return sess
 
-def connect(dburi, base = Base):
+def connect(dburi, base):
     '''easy function to connect to a database, returns a session'''
     engine = create_engine(dburi)
     return make_session(engine, base)

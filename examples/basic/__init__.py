@@ -13,7 +13,8 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
-# example of using another declarative_base class
+# users declare their own declarative Base, or use ones that are provided by other libs
+# i.e., viauth's sqlorm.Base
 Base = declarative_base()
 
 class PersonRecord(sqlorm.ViCMSBase, Base):
@@ -117,7 +118,7 @@ def create_app(test_config=None):
     )
 
     # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms
-    arch = Arch( app.config['DBURI'], [c1, c2], dbase = Base, url_prefix = '/')
+    arch = Arch( app.config['DBURI'], Base, [c1, c2], url_prefix = '/')
     arch.init_app(app)
 
     @app.route('/')

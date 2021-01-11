@@ -142,7 +142,7 @@ class ViContent:
         return self.__content_home()
 
 class Arch:
-    def __init__(self, dburi, contents, dbase = sqlorm.Base, url_prefix = None):
+    def __init__(self, dburi, dbase, contents, url_prefix = None):
         self.contents = {}
         self.__urlprefix = url_prefix
         self.session = sqlorm.connect(dburi, dbase)

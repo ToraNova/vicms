@@ -60,7 +60,7 @@ def create_app(test_config=None):
     )
 
     # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms
-    arch = Arch( app.config['DBURI'], [c1, c2], dbase = Base, url_prefix = '/')
+    arch = Arch( app.config['DBURI'], Base, [c1, c2], url_prefix = '/')
     arch.init_app(app)
 
     # THE FOLLOWING SETUP ONLY WORKS FOR USER tester with password test123
