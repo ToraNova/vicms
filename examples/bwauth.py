@@ -2,14 +2,14 @@ import os
 import tempfile
 import pytest
 
-from examples import withlogin
+from examples import withauth
 
 @pytest.fixture
 def app():
     """Create and configure a new app instance for each test."""
     db_fd, db_file = tempfile.mkstemp()
     db_uri = 'sqlite:///%s' % db_file
-    app = withlogin.create_app({"TESTING": True, "DBURI": db_uri})
+    app = withauth.create_app({"TESTING": True, "DBURI": db_uri})
 
     # create the database and load test data
     with app.app_context():
@@ -40,7 +40,6 @@ def test_case(client):
 
     rv = client.post('/login', data=dict(username="tester", password="test123"), follow_redirects=True)
     assert rv.status_code == 200
-    print(rv.data)
 
     rv = client.post('/personrec/insert', data=dict(name="jason",birthdate="1996-06-26"), follow_redirects=True)
     rv = client.post('/personrec/insert', data=dict(name="ting",birthdate="1996-10-02"), follow_redirects=True)

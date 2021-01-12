@@ -10,8 +10,8 @@ flask run
 '''
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, request
-from flask_login import login_user, LoginManager, current_user, logout_user, UserMixin
-from vicms.basic.withlogin import Arch, ViContent
+from flask_login import login_user, LoginManager, current_user, logout_user, UserMixin, login_required
+from vicms.basic.withauth import Arch, ViContent
 from vicms import sqlorm
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
@@ -42,15 +42,21 @@ def create_app(test_config=None):
 
     # define a place to find the templates and the content sqlorm class
     c1 = ViContent( PersonRecord,
-        login_not_required = ['select'],
+        # select who can access where (use of userpriv.admin_required, role_required OK!)
+        access_policy = {
+            'select': None,
+            },
+        # select the default policy, which is flask_login's login_required
+        default_ap = login_required,
         templates = {
             'select':'person/select.html',
             'select_one':'person/select_one.html',
             'insert':'person/insert.html',
             'update':'person/update.html'
-        }
+            }
     )
     c2 = ViContent( PairRecord,
+        default_ap = login_required,
         templates = {
             'select':'pair/select.html',
             'select_one':'pair/select_one.html',

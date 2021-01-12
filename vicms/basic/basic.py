@@ -7,6 +7,8 @@ from flask import render_template, request, redirect, abort, flash, url_for
 from vicms import source, sqlorm
 from sqlalchemy.exc import IntegrityError
 
+cmroutes = ('select', 'select_one', 'insert', 'update', 'delete')
+
 '''
 basic.ViContent Arch
 templates: select, select_one, insert, update
@@ -46,9 +48,20 @@ class ViContent:
                 'ex': lambda ex : flash("an exception (%s) has occurred: %s" % (type(ex).__name__, str(ex)), 'err'),
         }
 
-        for route in ['insert', 'select', 'select_one', 'update']:
+        self.__fctab = {
+                'select': self._select,
+                'select_one': self._select_one,
+                'insert': self._insert,
+                'update': self._update,
+                'delete': self._delete,
+                }
+
+        for route in cmroutes:
             if route in routes_disabled:
-                setattr(self, route, lambda *arg : abort(404))
+                self.__fctab[route] = lambda *arg : abort(404)
+
+    def routecall(self, route, *args):
+        return self.__fctab[route](*args)
 
     def set_callback(self, event, cbfunc):
         if not callable(cbfunc):
@@ -81,19 +94,19 @@ class ViContent:
     def __content_home(self):
         return redirect(url_for(self.__contenthome, **self.__contenthome_kwargs))
 
-    def select(self):
+    def _select(self):
         call = self.__contentclass.query.all()
         auxd = []
         for c in call:
             auxd.append(c.select_assist())
         return render_template(self.__templ['select'], data = call, auxd = auxd)
 
-    def select_one(self,id):
+    def _select_one(self,id):
         cone = self.__contentclass.query.filter(self.__contentclass.id == id).first()
         auxd = cone.select_assist()
         return render_template(self.__templ['select_one'], data = cone, auxd = auxd)
 
-    def insert(self):
+    def _insert(self):
         rscode = 200
         if request.method == 'POST':
             try:
@@ -111,7 +124,7 @@ class ViContent:
         form = self.__contentclass.formgen_assist(self.session)
         return render_template(self.__templ['insert'], form = form), rscode
 
-    def update(self,id):
+    def _update(self,id):
         rscode = 200
         targ = self.__contentclass.query.filter(self.__contentclass.id == id).first()
         if request.method == 'POST':
@@ -130,7 +143,7 @@ class ViContent:
         form = self.__contentclass.formgen_assist(self.session)
         return render_template(self.__templ['update'], data = targ, form = form), rscode
 
-    def delete(self,id):
+    def _delete(self,id):
         targ = self.__contentclass.query.filter(self.__contentclass.id == id).first()
         try:
             targ.delete()
@@ -167,22 +180,22 @@ class Arch:
 
         @bp.route('/<content>/', methods=['GET'])
         def select(content):
-            return self.contents[content].select()
+            return self.contents[content].routecall('select')
 
         @bp.route('/<content>/<id>', methods=['GET'])
         def select_one(content,id):
-            return self.contents[content].select_one(id)
+            return self.contents[content].routecall('select_one', id)
 
         @bp.route('/<content>/insert', methods=['GET','POST'])
         def insert(content):
-            return self.contents[content].insert()
+            return self.contents[content].routecall('insert')
 
         @bp.route('/<content>/update/<id>', methods=['GET','POST'])
         def update(content,id):
-            return self.contents[content].update(id)
+            return self.contents[content].routecall('update', id)
 
         @bp.route('/<content>/delete/<id>')
         def delete(content,id):
-            return self.contents[content].delete(id)
+            return self.contents[content].routecall('delete', id)
 
         return source.AppArch(bp)
