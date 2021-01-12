@@ -19,8 +19,8 @@ class ViContent:
 
     def __init__(self, content_class,
             templates = {},
-            content_home = 'vicms.select',
-            content_home_kwargs = {},
+            reroutes = {},
+            reroutes_kwarg = {},
             routes_disabled = []
         ):
         '''initialize the content structure. a content structure is used by an arch
@@ -37,10 +37,12 @@ class ViContent:
         self.__contentclass = content_class
         self.session = None
 
-        self.__contenthome = content_home
-        if not content_home_kwargs.get('content') or content_home_kwargs.get('content') == 'self':
-            content_home_kwargs['content'] = self.get_tablename()
-        self.__contenthome_kwargs = content_home_kwargs
+        self.__route = reroutes
+        self.__rkarg = reroutes_kwarg
+        self.__default_rt('insert', 'vicms.select')
+        self.__default_rt('update', 'vicms.select')
+        self.__default_rt('delete', 'vicms.select')
+
         self.__callbacks = {
                 'err': lambda msg : flash(msg, 'err'),
                 'ok': lambda msg : flash(msg, 'ok'),
@@ -59,6 +61,10 @@ class ViContent:
         for route in cmroutes:
             if route in routes_disabled:
                 self.__fctab[route] = lambda *arg : abort(404)
+
+    @property
+    def tablename(self):
+        return self.__contentclass.__tablename__
 
     def routecall(self, route, *args):
         return self.__fctab[route](*args)
@@ -81,18 +87,23 @@ class ViContent:
     def ex(self, e):
         self.callback('ex', e)
 
+    def __reroute(self, fromkey):
+        if self.__rkarg.get(fromkey):
+            return redirect(url_for(self.__route[fromkey], **self.__rkarg.get(fromkey)))
+        else:
+            return redirect(url_for(self.__route[fromkey]))
+
     def __default_tp(self, key, value):
         if not self.__templ.get(key):
             self.__templ[key] = value
 
+    def __default_rt(self, key, value):
+        if not self.__route.get(key):
+            self.__route[key] = value
+            self.__rkarg[key] = {'content': self.tablename }
+
     def _set_session(self, session):
         self.session = session
-
-    def get_tablename(self):
-        return self.__contentclass.__tablename__
-
-    def __content_home(self):
-        return redirect(url_for(self.__contenthome, **self.__contenthome_kwargs))
 
     def _select(self):
         call = self.__contentclass.query.all()
@@ -114,7 +125,7 @@ class ViContent:
                 self.session.add(new)
                 self.session.commit()
                 self.ok('successfully inserted')
-                return self.__content_home()
+                return self.__reroute('insert')
             except IntegrityError as e:
                 self.error('integrity error')
                 rscode = 409
@@ -133,7 +144,7 @@ class ViContent:
                 self.session.add(targ)
                 self.session.commit()
                 self.ok('successfully updated')
-                return self.__content_home()
+                return self.__reroute('update')
             except IntegrityError as e:
                 self.error('integrity error')
                 rscode = 409
@@ -152,7 +163,7 @@ class ViContent:
         except Exception as e:
             self.session.rollback()
             source.eflash(e)
-        return self.__content_home()
+        return self.__reroute('delete')
 
 class Arch:
     def __init__(self, dburi, dbase, contents, url_prefix = None):
@@ -161,8 +172,12 @@ class Arch:
         self.session = sqlorm.connect(dburi, dbase)
         for c in contents:
             assert isinstance(c, ViContent)
-            self.contents[c.get_tablename()] = c
-            self.contents[c.get_tablename()]._set_session(self.session)
+            self.contents[c.tablename] = c
+            self.contents[c.tablename]._set_session(self.session)
+
+    def set_session(self, session):
+        for k in self.contents:
+            self.contents[k]._set_session(session)
 
     def init_app(self, app):
         apparch = self.generate()

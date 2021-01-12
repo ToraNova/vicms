@@ -113,8 +113,8 @@ def create_app(test_config=None):
             'insert':'pair/insert.html',
             'update':'pair/update.html'
         },
-        content_home = 'vicms.select',
-        content_home_kwargs = {'content': 'self' }
+        reroutes = {},
+        reroutes_kwarg = {},
     )
 
     # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms

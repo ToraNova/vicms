@@ -23,11 +23,11 @@ class ViContent(basic.ViContent):
             access_policy = {},
             default_ap = None,
             templates = {},
-            content_home = 'vicms.select',
-            content_home_kwargs = {},
+            reroutes = {},
+            reroutes_kwarg = {},
             routes_disabled = []
         ):
-        super().__init__(content_class, templates, content_home, content_home_kwargs, routes_disabled)
+        super().__init__(content_class, templates, reroutes, reroutes_kwarg, routes_disabled)
 
         for route, policy in access_policy.items():
             if policy:
