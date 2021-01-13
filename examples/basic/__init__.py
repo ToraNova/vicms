@@ -8,16 +8,15 @@ flask run
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for
 from vicms.basic import Arch, ViContent
-from vicms import sqlorm
+from vicms import sqlorm, ViCMSMixin
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
 
 # users declare their own declarative Base, or use ones that are provided by other libs
 # i.e., viauth's sqlorm.Base
-Base = declarative_base()
+Base = sqlorm.declarative_base()
 
-class PersonRecord(sqlorm.ViCMSBase, Base):
+class PersonRecord(ViCMSMixin, Base):
     '''an example content class that can be used by the cms library'''
     __tablename__ = "personrec"
     id = Column(Integer, primary_key = True)
@@ -48,7 +47,7 @@ class PersonRecord(sqlorm.ViCMSBase, Base):
     def delete(self):
         pass
 
-class PairRecord(sqlorm.ViCMSBase, Base):
+class PairRecord(ViCMSMixin, Base):
     __tablename__ = "pairrec"
     id = Column(Integer, primary_key = True)
     aid = Column(Integer, ForeignKey('personrec.id'), nullable=True)

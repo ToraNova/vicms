@@ -4,7 +4,7 @@ supports multiple content per arch
 '''
 
 from flask import render_template, request, redirect, abort, flash, url_for
-from vicms import source, sqlorm
+from vicms import source, sqlorm, ViCMSMixin
 from sqlalchemy.exc import IntegrityError
 
 cmroutes = ('select', 'select_one', 'insert', 'update', 'delete')
@@ -33,7 +33,7 @@ class ViContent:
         self.__default_tp('update','update.html')
 
         #assert issubclass(content_class, sqlorm.Base) # could be initialized from an alternative base
-        assert issubclass(content_class, sqlorm.ViCMSBase)
+        assert issubclass(content_class, ViCMSMixin)
         self.__contentclass = content_class
         self.session = None
 
@@ -162,7 +162,7 @@ class ViContent:
             self.session.commit()
         except Exception as e:
             self.session.rollback()
-            source.eflash(e)
+            self.ex(e)
         return self.__reroute('delete')
 
 class Arch:

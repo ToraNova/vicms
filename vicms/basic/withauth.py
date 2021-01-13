@@ -5,7 +5,6 @@ this can be used with viauth
 supports multiple content per arch
 '''
 from flask import render_template, request, redirect, abort, flash, url_for
-from vicms import source
 from vicms.basic import basic
 from flask_login import current_user, login_required
 
