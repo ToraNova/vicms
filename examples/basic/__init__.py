@@ -26,9 +26,13 @@ class PersonRecord(ViCMSMixin, Base):
     def strdate(self):
         return '' if not self.birthdate else self.birthdate.strftime("%Y-%m-%d")
 
+    def formgen_assist(session):
+        return None
+
     # this is called on select/select_one routes to provide auxliary data
     # the provided value can be accessed from the 'auxd' variable
-    def select_assist(self):
+    @classmethod
+    def select_assist(cls):
         return None
 
     # this is called on insertion, decide what to insert and how based on form
@@ -60,6 +64,12 @@ class PairRecord(ViCMSMixin, Base):
     def formgen_assist(session):
         p = PersonRecord.query.all()
         return p if p else []
+
+    # this is called on select/select_one routes to provide auxliary data
+    # the provided value can be accessed from the 'auxd' variable
+    @classmethod
+    def select_assist(cls):
+        return None
 
     # this is called on insertion, decide what to insert and how based on form
     # this is in a try-catch block, raise an exception to abort if necessary

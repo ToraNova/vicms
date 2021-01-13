@@ -5,7 +5,8 @@ class ViCMSMixin:
     def formgen_assist(session):
         return None
 
-    def select_assist(self):
+    @classmethod
+    def select_assist(cls):
         return None
 
     # create table if not exist on dburi

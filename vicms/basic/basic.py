@@ -107,14 +107,12 @@ class ViContent:
 
     def _select(self):
         call = self.__contentclass.query.all()
-        auxd = []
-        for c in call:
-            auxd.append(c.select_assist())
+        auxd = self.__contentclass.select_assist()
         return render_template(self.__templ['select'], data = call, auxd = auxd)
 
     def _select_one(self,id):
         cone = self.__contentclass.query.filter(self.__contentclass.id == id).first()
-        auxd = cone.select_assist()
+        auxd = self.__contentclass.select_assist()
         return render_template(self.__templ['select_one'], data = cone, auxd = auxd)
 
     def _insert(self):
