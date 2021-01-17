@@ -193,22 +193,32 @@ class Arch:
 
         @bp.route('/<content>/', methods=['GET'])
         def select(content):
+            if content not in self.contents:
+                abort(404)
             return self.contents[content].routecall('select')
 
         @bp.route('/<content>/<id>', methods=['GET'])
         def select_one(content,id):
+            if content not in self.contents:
+                abort(404)
             return self.contents[content].routecall('select_one', id)
 
         @bp.route('/<content>/insert', methods=['GET','POST'])
         def insert(content):
+            if content not in self.contents:
+                abort(404)
             return self.contents[content].routecall('insert')
 
         @bp.route('/<content>/update/<id>', methods=['GET','POST'])
         def update(content,id):
+            if content not in self.contents:
+                abort(404)
             return self.contents[content].routecall('update', id)
 
         @bp.route('/<content>/delete/<id>')
         def delete(content,id):
+            if content not in self.contents:
+                abort(404)
             return self.contents[content].routecall('delete', id)
 
         return source.AppArch(bp)
