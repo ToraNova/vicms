@@ -122,10 +122,10 @@ class ViContent:
                 new = self.__contentclass(request.form)
                 self.session.add(new)
                 self.session.commit()
-                self.ok('successfully inserted')
+                self.ok('successfully inserted.')
                 return self.__reroute('insert')
             except IntegrityError as e:
-                self.error('integrity error')
+                self.error('integrity error.')
                 rscode = 409
             except Exception as e:
                 self.ex(e)
@@ -141,10 +141,10 @@ class ViContent:
                 targ.update(request.form)
                 self.session.add(targ)
                 self.session.commit()
-                self.ok('successfully updated')
+                self.ok('successfully updated.')
                 return self.__reroute('update')
             except IntegrityError as e:
-                self.error('integrity error')
+                self.error('integrity error.')
                 rscode = 409
             except Exception as e:
                 self.ex(e)
