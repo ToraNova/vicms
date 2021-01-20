@@ -4,7 +4,7 @@ supports multiple content per arch
 '''
 
 from flask import render_template, request, redirect, abort, flash, url_for
-from vicms import source, sqlorm, ViCMSMixin
+from vicms import vial, sqlorm, ViCMSMixin
 from sqlalchemy.exc import IntegrityError
 
 cmroutes = ('select', 'select_one', 'insert', 'update', 'delete')
@@ -189,7 +189,7 @@ class Arch:
         return app
 
     def generate(self):
-        bp = source.make_blueprint(self.__urlprefix)
+        bp = vial.make_blueprint(self.__urlprefix)
 
         @bp.route('/<content>/', methods=['GET'])
         def select(content):
@@ -221,4 +221,4 @@ class Arch:
                 abort(404)
             return self.contents[content].routecall('delete', id)
 
-        return source.AppArch(bp)
+        return vial.AppArch(bp)
