@@ -1,4 +1,13 @@
 from sqlalchemy import create_engine, inspect
+from flask import Blueprint
+from collections import namedtuple
+
+AppArch = namedtuple('AppArch', ['bp'])
+
+def make_blueprint(prefix=None, name='vicms'):
+    prefix = prefix if prefix else '/%s'%name
+    bp = Blueprint(name, __name__, url_prefix=prefix)
+    return bp
 
 class ViCMSMixin:
 
