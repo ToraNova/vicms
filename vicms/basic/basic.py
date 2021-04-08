@@ -4,7 +4,8 @@ supports multiple content per arch
 '''
 
 from flask import render_template, request, redirect, abort, flash, url_for
-from vicms import sqlorm, ViCMSMixin, make_blueprint, AppArch
+from vicms import sqlorm, ViCMSMixin
+from vibase import ViArchBase, AppArch
 from sqlalchemy.exc import IntegrityError
 
 cmroutes = ('select', 'select_one', 'insert', 'update', 'delete')
@@ -15,7 +16,7 @@ templates: select, select_one, insert, update
 content_home: redirect to content_home after insert, update, delete
 set content='self' to redirect to the content's home (default behavior)
 '''
-class ViContent:
+class ViContent(ViArchBase):
 
     def __init__(self, content_class,
             templates = {},
@@ -26,29 +27,21 @@ class ViContent:
         '''initialize the content structure. a content structure is used by an arch
         to easily create routes
         '''
-        self.__templ = templates
-        self.__default_tp('insert','insert.html')
-        self.__default_tp('select','select.html')
-        self.__default_tp('select_one','select_one.html')
-        self.__default_tp('update','update.html')
+        if not issubclass(content_class, ViCMSMixin):
+            raise TypeError('content_class must inherit from vicms.ViCMSMixin')
+        self.__contentclass = content_class
+        super().__init__(self.tablename, templates, reroutes, reroutes_kwarg)
+        self._reroute = self._cms_reroute # little hack to allow cms arch behavior
+        self._default_tp('insert','insert.html')
+        self._default_tp('select','select.html')
+        self._default_tp('select_one','select_one.html')
+        self._default_tp('update','update.html')
 
         #assert issubclass(content_class, sqlorm.Base) # could be initialized from an alternative base
-        assert issubclass(content_class, ViCMSMixin)
-        self.__contentclass = content_class
         self.session = None
-
-        self.__route = reroutes
-        self.__rkarg = reroutes_kwarg
-        self.__default_rt('insert', 'vicms.select')
-        self.__default_rt('update', 'vicms.select')
-        self.__default_rt('delete', 'vicms.select')
-
-        self.__callbacks = {
-                'err': lambda msg : flash(msg, 'err'),
-                'ok': lambda msg : flash(msg, 'ok'),
-                'warn': lambda msg : flash(msg, 'warn'),
-                'ex': lambda ex : flash("an exception (%s) has occurred: %s" % (type(ex).__name__, str(ex)), 'err'),
-        }
+        self._default_rt('insert', 'vicms.select')
+        self._default_rt('update', 'vicms.select')
+        self._default_rt('delete', 'vicms.select')
 
         self.__fctab = {
                 'select': self._select,
@@ -69,51 +62,18 @@ class ViContent:
     def routecall(self, route, *args):
         return self.__fctab[route](*args)
 
-    def set_callback(self, event, cbfunc):
-        if not callable(cbfunc):
-            raise TypeError("callback function should be callable")
-        self.__callbacks[event] = cbfunc
-
-    def callback(self, event, *args):
-        return self.__callbacks[event](*args)
-
-    # convenience functions
-    def error(self, msg):
-        self.callback('err', msg)
-
-    def ok(self, msg):
-        self.callback('ok', msg)
-
-    def ex(self, e):
-        self.callback('ex', e)
-
-    def __reroute(self, fromkey):
-        if self.__rkarg.get(fromkey):
-            return redirect(url_for(self.__route[fromkey], **self.__rkarg.get(fromkey)))
-        else:
-            return redirect(url_for(self.__route[fromkey]))
-
-    def __default_tp(self, key, value):
-        if not self.__templ.get(key):
-            self.__templ[key] = value
-
-    def __default_rt(self, key, value):
-        if not self.__route.get(key):
-            self.__route[key] = value
-            self.__rkarg[key] = {'content': self.tablename }
-
     def _set_session(self, session):
         self.session = session
 
     def _select(self):
         call = self.__contentclass.query.all()
         auxd = self.__contentclass.select_assist()
-        return render_template(self.__templ['select'], data = call, auxd = auxd)
+        return render_template(self._templ['select'], data = call, auxd = auxd)
 
     def _select_one(self,id):
         cone = self.__contentclass.query.filter(self.__contentclass.id == id).first()
         auxd = self.__contentclass.select_assist()
-        return render_template(self.__templ['select_one'], data = cone, auxd = auxd)
+        return render_template(self._templ['select_one'], data = cone, auxd = auxd)
 
     def _insert(self):
         rscode = 200
@@ -123,7 +83,7 @@ class ViContent:
                 self.session.add(new)
                 self.session.commit()
                 self.ok('successfully inserted.')
-                return self.__reroute('insert')
+                return self._reroute('insert')
             except IntegrityError as e:
                 self.error('integrity error.')
                 rscode = 409
@@ -131,7 +91,7 @@ class ViContent:
                 self.ex(e)
             self.session.rollback()
         form = self.__contentclass.formgen_assist(self.session)
-        return render_template(self.__templ['insert'], form = form), rscode
+        return render_template(self._templ['insert'], form = form), rscode
 
     def _update(self,id):
         rscode = 200
@@ -142,7 +102,7 @@ class ViContent:
                 self.session.add(targ)
                 self.session.commit()
                 self.ok('successfully updated.')
-                return self.__reroute('update')
+                return self._reroute('update')
             except IntegrityError as e:
                 self.error('integrity error.')
                 rscode = 409
@@ -150,7 +110,7 @@ class ViContent:
                 self.ex(e)
             self.session.rollback()
         form = self.__contentclass.formgen_assist(self.session)
-        return render_template(self.__templ['update'], data = targ, form = form), rscode
+        return render_template(self._templ['update'], data = targ, form = form), rscode
 
     def _delete(self,id):
         targ = self.__contentclass.query.filter(self.__contentclass.id == id).first()
@@ -161,12 +121,12 @@ class ViContent:
         except Exception as e:
             self.session.rollback()
             self.ex(e)
-        return self.__reroute('delete')
+        return self._reroute('delete')
 
-class Arch:
+class Arch(ViArchBase):
     def __init__(self, dburi, dbase, contents, url_prefix = None):
+        super().__init__('vicms', url_prefix = url_prefix)
         self.contents = {}
-        self.__urlprefix = url_prefix
         self.session = sqlorm.connect(dburi, dbase)
         for c in contents:
             assert isinstance(c, ViContent)
@@ -189,7 +149,7 @@ class Arch:
         return app
 
     def generate(self):
-        bp = make_blueprint(self.__urlprefix)
+        bp = self._init_bp()
 
         @bp.route('/<content>/', methods=['GET'])
         def select(content):
