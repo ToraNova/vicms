@@ -6,7 +6,7 @@ supports multiple content per arch
 '''
 from flask import render_template, request, redirect, abort, flash, url_for
 from vicms.basic import basic
-from flask_login import current_user, login_required
+#from flask_login import current_user, login_required
 
 # late-binding vs. early binding
 # https://stackoverflow.com/questions/3431676/creating-functions-in-a-loop

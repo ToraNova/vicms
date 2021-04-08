@@ -5,7 +5,7 @@ supports multiple content per arch
 
 from flask import render_template, request, redirect, abort, flash, url_for
 from vicms import sqlorm, ViCMSMixin
-from vibase import ViArchBase, AppArch
+from vicore import ViArchBase, AppArch
 from sqlalchemy.exc import IntegrityError
 
 cmroutes = ('select', 'select_one', 'insert', 'update', 'delete')
