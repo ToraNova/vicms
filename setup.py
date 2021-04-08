@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-_version = '0.1.5'
+_version = '0.1.6'
 
 setup(
     name='vicms',
@@ -17,7 +17,7 @@ setup(
     keywords = ['Flask', 'Content Management Module'],
     install_requires=[
         'flask',
-        'vibase',
+        'vicore',
         'sqlalchemy',
     ],
     classifiers=[
