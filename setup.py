@@ -17,7 +17,7 @@ setup(
     keywords = ['Flask', 'Content Management Module'],
     install_requires=[
         'flask',
-        'vicore>=0.1.1',
+        'vicore',
         'sqlalchemy',
     ],
     classifiers=[
