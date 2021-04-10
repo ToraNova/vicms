@@ -4,19 +4,19 @@ supports multiple content per arch
 '''
 
 from flask import render_template, request, redirect, abort, flash, url_for
-from vicms import sqlorm, ViCMSMixin
-from vicore import ViArchBase, AppArch
+from vicms import ContentMixin
+from vicore import BaseArch, sqlorm
 from sqlalchemy.exc import IntegrityError
 
 cmroutes = ('select', 'select_one', 'insert', 'update', 'delete')
 
 '''
-basic.ViContent Arch
+basic.Content Arch
 templates: select, select_one, insert, update
 content_home: redirect to content_home after insert, update, delete
 set content='self' to redirect to the content's home (default behavior)
 '''
-class ViContent(ViArchBase):
+class Content(BaseArch):
 
     def __init__(self, content_class,
             templates = {},
@@ -27,8 +27,8 @@ class ViContent(ViArchBase):
         '''initialize the content structure. a content structure is used by an arch
         to easily create routes
         '''
-        if not issubclass(content_class, ViCMSMixin):
-            raise TypeError('content_class must inherit from vicms.ViCMSMixin')
+        if not issubclass(content_class, ContentMixin):
+            raise TypeError('content_class must inherit from vicms.ContentMixin')
         self.__contentclass = content_class
         super().__init__(self.tablename, templates, reroutes, reroutes_kwarg)
         self._reroute = self._cms_reroute # little hack to allow cms arch behavior
@@ -67,13 +67,11 @@ class ViContent(ViArchBase):
 
     def _select(self):
         call = self.__contentclass.query.all()
-        auxd = self.__contentclass.select_assist()
-        return render_template(self._templ['select'], data = call, auxd = auxd)
+        return render_template(self._templ['select'], data = call)
 
     def _select_one(self,id):
         cone = self.__contentclass.query.filter(self.__contentclass.id == id).first()
-        auxd = self.__contentclass.select_assist()
-        return render_template(self._templ['select_one'], data = cone, auxd = auxd)
+        return render_template(self._templ['select_one'], data = cone)
 
     def _insert(self):
         rscode = 200
@@ -90,8 +88,8 @@ class ViContent(ViArchBase):
             except Exception as e:
                 self.ex(e)
             self.session.rollback()
-        form = self.__contentclass.formgen_assist(self.session)
-        return render_template(self._templ['insert'], form = form), rscode
+        fauxd = self.__contentclass.form_auxdata_generate(self.session)
+        return render_template(self._templ['insert'], form_auxd = fauxd), rscode
 
     def _update(self,id):
         rscode = 200
@@ -109,8 +107,8 @@ class ViContent(ViArchBase):
             except Exception as e:
                 self.ex(e)
             self.session.rollback()
-        form = self.__contentclass.formgen_assist(self.session)
-        return render_template(self._templ['update'], data = targ, form = form), rscode
+        fauxd = self.__contentclass.form_auxdata_generate(self.session)
+        return render_template(self._templ['update'], data = targ, form_auxd = fauxd), rscode
 
     def _delete(self,id):
         targ = self.__contentclass.query.filter(self.__contentclass.id == id).first()
@@ -123,13 +121,14 @@ class ViContent(ViArchBase):
             self.ex(e)
         return self._reroute('delete')
 
-class Arch(ViArchBase):
-    def __init__(self, dburi, dbase, contents, url_prefix = None):
+class Arch(BaseArch):
+    def __init__(self, sqlorm_session, contents, url_prefix = None):
         super().__init__('vicms', url_prefix = url_prefix)
         self.contents = {}
-        self.session = sqlorm.connect(dburi, dbase)
+        self.session = sqlorm_session
+        #self.session = sqlorm_connect(dburi, dbase)
         for c in contents:
-            assert isinstance(c, ViContent)
+            assert isinstance(c, Content)
             self.contents[c.tablename] = c
             self.contents[c.tablename]._set_session(self.session)
 
@@ -138,17 +137,17 @@ class Arch(ViArchBase):
             self.contents[k]._set_session(session)
 
     def init_app(self, app):
-        apparch = self.generate()
-        app.register_blueprint(apparch.bp)
+        bp = self.generate_blueprint()
+        app.register_blueprint(bp)
 
+        # teardown context for the sqlorm session
         @app.teardown_appcontext
         def shutdown_session(exception=None):
             self.session.remove()
-            pass
 
         return app
 
-    def generate(self):
+    def generate_blueprint(self):
         bp = self._init_bp()
 
         @bp.route('/<content>/', methods=['GET'])
@@ -181,4 +180,4 @@ class Arch(ViArchBase):
                 abort(404)
             return self.contents[content].routecall('delete', id)
 
-        return AppArch(bp)
+        return bp

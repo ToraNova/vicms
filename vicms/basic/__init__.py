@@ -1,4 +1,4 @@
 from vicms.basic import basic
 
-ViContent = basic.ViContent
+Content = basic.Content
 Arch = basic.Arch

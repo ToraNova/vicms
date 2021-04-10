@@ -11,8 +11,8 @@ flask run
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, request
 from flask_login import login_user, LoginManager, current_user, logout_user, UserMixin, login_required
-from vicms.basic.withauth import Arch, ViContent
 from vicms import sqlorm
+from vicms.basic.withauth import Arch, Content
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from examples.basic import PersonRecord, PairRecord, Base
@@ -41,7 +41,7 @@ def create_app(test_config=None):
         pass
 
     # define a place to find the templates and the content sqlorm class
-    c1 = ViContent( PersonRecord,
+    c1 = Content( PersonRecord,
         # select who can access where (use of userpriv.admin_required, role_required OK!)
         access_policy = {
             'select': None,
@@ -55,7 +55,7 @@ def create_app(test_config=None):
             'update':'person/update.html'
             }
     )
-    c2 = ViContent( PairRecord,
+    c2 = Content( PairRecord,
         default_ap = login_required,
         templates = {
             'select':'pair/select.html',
@@ -66,7 +66,14 @@ def create_app(test_config=None):
     )
 
     # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms
-    arch = Arch( app.config['DBURI'], Base, [c1, c2], url_prefix = '/')
+    session = sqlorm.connect(app.config['DBURI'], Base)
+    #arch = Arch( session, [c1, c2], url_prefix = '/')
+    #bp = arch.generate_blueprint()
+    #app.register_blueprint(bp)
+
+    arch = Arch( session, [c1, c2], url_prefix = '/')
+    #bp = Arch( session, [c1, c2], url_prefix = '/').generate_blueprint()
+    #app.register_blueprint(bp)
     arch.init_app(app)
 
     # THE FOLLOWING SETUP ONLY WORKS FOR USER tester with password test123
@@ -97,5 +104,10 @@ def create_app(test_config=None):
     def logout():
         logout_user()
         return 'logged out'
+
+    # teardown context for the sqlorm session, init app already handled for us
+    #@app.teardown_appcontext
+    #def shutdown_session(exception=None):
+    #    session.remove()
 
     return app

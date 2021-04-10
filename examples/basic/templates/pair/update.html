@@ -7,7 +7,7 @@
 <form method="post">
 	<label>a's id</label></br>
 	<select name="aid" required>
-		{% for f in form %}
+		{% for f in form_auxd %}
 		{% if data.aid == f.id %}
 			<option value="{{f.id}}" selected>{{ f.name }}</option>
 		{% else %}
@@ -20,7 +20,7 @@
 
 	<label>b's id</label></br>
 	<select name="bid" required>
-		{% for f in form %}
+		{% for f in form_auxd %}
 		{% if data.bid == f.id %}
 			<option value="{{f.id}}" selected>{{ f.name }}</option>
 		{% else %}

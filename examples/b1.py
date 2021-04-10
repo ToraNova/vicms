@@ -44,6 +44,9 @@ def test_case(client):
     rv = client.get('/personrec/1')
     assert b'<h1>jason</h1>' in rv.data
 
+    rv = client.get('/pairrec/insert')
+    assert b'jason' in rv.data and b'ting' in rv.data
+
     rv = client.post('/pairrec/insert', data=dict(aid="1",bid="2"), follow_redirects=True)
     assert b'jason ting' in rv.data
 

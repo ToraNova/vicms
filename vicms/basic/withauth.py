@@ -16,7 +16,7 @@ def accesspol_route(policy, route, oldfunc):
         return oldfunc(*args)
     return f
 
-class ViContent(basic.ViContent):
+class Content(basic.Content):
 
     def __init__(self, content_class,
             access_policy = {},
@@ -43,9 +43,6 @@ class ViContent(basic.ViContent):
         #    if k not in login_not_required:
         #        setattr(self, k, getattr(self, '_ViContent__'+k))
 
+# nothing new added to arch, just a place holder to nicer importing
 class Arch(basic.Arch):
-    def __init__(self, dburi, dbase, contents, url_prefix = None):
-        super().__init__(dburi, dbase, contents, url_prefix)
-
-    def generate(self):
-        return super().generate()
+    pass

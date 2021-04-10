@@ -7,16 +7,17 @@ flask run
 '''
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for
-from vicms.basic import Arch, ViContent
-from vicms import sqlorm, ViCMSMixin
+from vicms.basic import Arch, Content
+from vicms import ContentMixin, sqlorm
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
 
 # users declare their own declarative Base, or use ones that are provided by other libs
-# i.e., viauth's sqlorm.Base
-Base = sqlorm.declarative_base()
+# i.e., 's sqlorm.Base
+Base = declarative_base()
 
-class PersonRecord(ViCMSMixin, Base):
+class PersonRecord(ContentMixin, Base):
     '''an example content class that can be used by the cms library'''
     __tablename__ = "personrec"
     id = Column(Integer, primary_key = True)
@@ -26,14 +27,11 @@ class PersonRecord(ViCMSMixin, Base):
     def strdate(self):
         return '' if not self.birthdate else self.birthdate.strftime("%Y-%m-%d")
 
-    def formgen_assist(session):
-        return None
-
-    # this is called on select/select_one routes to provide auxliary data
-    # the provided value can be accessed from the 'auxd' variable
-    @classmethod
-    def select_assist(cls):
-        return None
+    # this is called on insertion GETs, a variable form_data is returned to jinja to help
+    # dynamic form creation (if necessary, can be left out)
+    # the variable passed to html/jinja is form_auxd
+    def form_auxdata_generate(session):
+        return []
 
     # this is called on insertion, decide what to insert and how based on form
     # this is in a try-catch block, raise an exception to abort if necessary
@@ -51,7 +49,7 @@ class PersonRecord(ViCMSMixin, Base):
     def delete(self):
         pass
 
-class PairRecord(ViCMSMixin, Base):
+class PairRecord(ContentMixin, Base):
     __tablename__ = "pairrec"
     id = Column(Integer, primary_key = True)
     aid = Column(Integer, ForeignKey('personrec.id'), nullable=True)
@@ -61,15 +59,10 @@ class PairRecord(ViCMSMixin, Base):
 
     # this is called on insertion GETs, a variable form_data is returned to jinja to help
     # dynamic form creation (if necessary, can be left out)
-    def formgen_assist(session):
+    # the variable passed to html/jinja is form_auxd
+    def form_auxdata_generate(session):
         p = PersonRecord.query.all()
         return p if p else []
-
-    # this is called on select/select_one routes to provide auxliary data
-    # the provided value can be accessed from the 'auxd' variable
-    @classmethod
-    def select_assist(cls):
-        return None
 
     # this is called on insertion, decide what to insert and how based on form
     # this is in a try-catch block, raise an exception to abort if necessary
@@ -107,7 +100,7 @@ def create_app(test_config=None):
         pass
 
     # define a place to find the templates and the content sqlorm class
-    c1 = ViContent( PersonRecord,
+    c1 = Content( PersonRecord,
         templates = {
             'select':'person/select.html',
             'select_one':'person/select_one.html',
@@ -115,7 +108,7 @@ def create_app(test_config=None):
             'update':'person/update.html'
         }
     )
-    c2 = ViContent( PairRecord,
+    c2 = Content( PairRecord,
         templates = {
             'select':'pair/select.html',
             'select_one':'pair/select_one.html',
@@ -127,11 +120,19 @@ def create_app(test_config=None):
     )
 
     # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms
-    arch = Arch( app.config['DBURI'], Base, [c1, c2], url_prefix = '/')
+    session = sqlorm.connect(app.config['DBURI'], Base)
+    arch = Arch( session, [c1, c2], url_prefix = '/')
+    #bp = Arch( session, [c1, c2], url_prefix = '/').generate_blueprint()
+    #app.register_blueprint(bp)
     arch.init_app(app)
 
     @app.route('/')
     def root():
         return render_template('home.html')
+
+    # teardown context for the sqlorm session, init_app already handled it for us
+    #@app.teardown_appcontext
+    #def shutdown_session(exception=None):
+    #    session.remove()
 
     return app
