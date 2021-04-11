@@ -18,7 +18,8 @@ set content='self' to redirect to the content's home (default behavior)
 '''
 class Content(BaseArch):
 
-    def __init__(self, content_class,
+    def __init__(self,
+            content_class,
             templates = {},
             reroutes = {},
             reroutes_kwarg = {},
@@ -31,7 +32,7 @@ class Content(BaseArch):
             raise TypeError('content_class must inherit from vicms.ContentMixin')
         self.__contentclass = content_class
         super().__init__(self.tablename, templates, reroutes, reroutes_kwarg)
-        self._reroute = self._cms_reroute # little hack to allow cms arch behavior
+        #self._reroute = self._cms_reroute # little hack to allow cms arch behavior
         self._default_tp('insert','insert.html')
         self._default_tp('select','select.html')
         self._default_tp('select_one','select_one.html')
@@ -42,6 +43,8 @@ class Content(BaseArch):
         self._default_rt('insert', 'vicms.select')
         self._default_rt('update', 'vicms.select')
         self._default_rt('delete', 'vicms.select')
+        # add in 'additional' reroute arg 'content', pass in tablename
+        self._reroute_mod('content',self.tablename)
 
         self.__fctab = {
                 'select': self._select,
@@ -49,7 +52,7 @@ class Content(BaseArch):
                 'insert': self._insert,
                 'update': self._update,
                 'delete': self._delete,
-                }
+        }
 
         for route in cmroutes:
             if route in routes_disabled:

@@ -49,6 +49,7 @@ def test_case(client):
 
     rv = client.post('/pairrec/insert', data=dict(aid="1",bid="2"), follow_redirects=True)
     assert b'jason ting' in rv.data
+    assert b'oaktree' in rv.data
 
     rv = client.post('/pairrec/update/1', data=dict(aid="1", bid="1"), follow_redirects=True)
     assert b'a person may not pair with themself' in rv.data

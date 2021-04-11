@@ -43,6 +43,7 @@ def create_app(test_config=None):
     # define a place to find the templates and the content sqlorm class
     c1 = Content( PersonRecord,
         # select who can access where (use of userpriv.admin_required, role_required OK!)
+        # set to None to allow anyone to access (public, no access policy)
         access_policy = {
             'select': None,
             },
@@ -53,7 +54,7 @@ def create_app(test_config=None):
             'select_one':'person/select_one.html',
             'insert':'person/insert.html',
             'update':'person/update.html'
-            }
+        }
     )
     c2 = Content( PairRecord,
         default_ap = login_required,
@@ -91,6 +92,12 @@ def create_app(test_config=None):
     @app.route('/')
     def root():
         return render_template('home.html')
+
+    # for browser test
+    @app.route('/cheat/', methods=['GET'])
+    def cheat():
+        login_user( PlaceHolderAuth() )
+        return 'logged in'
 
     @app.route('/login', methods=['GET','POST'])
     def login():

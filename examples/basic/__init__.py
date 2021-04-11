@@ -115,8 +115,12 @@ def create_app(test_config=None):
             'insert':'pair/insert.html',
             'update':'pair/update.html'
         },
-        reroutes = {},
-        reroutes_kwarg = {},
+        reroutes = {
+            'insert': 'test',
+        },
+        reroutes_kwarg = {
+            'insert': {'var':'oaktree'}, # when we are rerouted after 'insert'
+        },
     )
 
     # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms
@@ -129,6 +133,11 @@ def create_app(test_config=None):
     @app.route('/')
     def root():
         return render_template('home.html')
+
+    @app.route('/kwarg/<var>/')
+    def test(var):
+        pr = PairRecord.query.all()
+        return render_template('pair/select.html', data=pr) + var
 
     # teardown context for the sqlorm session, init_app already handled it for us
     #@app.teardown_appcontext
