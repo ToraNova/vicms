@@ -6,7 +6,7 @@ export FLASK_APP=basic
 flask run
 '''
 from datetime import datetime
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, flash
 from vicms.basic import Arch, Content
 from vicms import ContentMixin, sqlorm
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
@@ -106,7 +106,11 @@ def create_app(test_config=None):
             'select_one':'person/select_one.html',
             'insert':'person/insert.html',
             'update':'person/update.html'
-        }
+        },
+        # example of altering a callback. when insert successfully, call this user func.
+        rex_callback = {
+            'insert': {'ok': lambda *args, **kwargs : flash('NEW PERSON!')},
+        },
     )
     c2 = Content( PairRecord,
         templates = {

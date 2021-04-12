@@ -23,6 +23,7 @@ class Content(BaseArch):
             templates = {},
             reroutes = {},
             reroutes_kwarg = {},
+            rex_callback = {},
             routes_disabled = []
         ):
         '''initialize the content structure. a content structure is used by an arch
@@ -31,7 +32,7 @@ class Content(BaseArch):
         if not issubclass(content_class, ContentMixin):
             raise TypeError('content_class must inherit from vicms.ContentMixin')
         self.__contentclass = content_class
-        super().__init__(self.tablename, templates, reroutes, reroutes_kwarg)
+        super().__init__(self.tablename, templates, reroutes, reroutes_kwarg, rex_callback)
         #self._reroute = self._cms_reroute # little hack to allow cms arch behavior
         self._default_tp('insert','insert.html')
         self._default_tp('select','select.html')
@@ -83,13 +84,13 @@ class Content(BaseArch):
                 new = self.__contentclass(request.form)
                 self.session.add(new)
                 self.session.commit()
-                self.ok('successfully inserted.')
+                self.ok('insert', 'successfully inserted.')
                 return self._reroute('insert')
             except IntegrityError as e:
-                self.error('integrity error.')
+                self.err('insert', 'integrity error.')
                 rscode = 409
             except Exception as e:
-                self.ex(e)
+                self.ex('insert', e)
             self.session.rollback()
         fauxd = self.__contentclass.form_auxdata_generate(self.session)
         return render_template(self._templ['insert'], form_auxd = fauxd), rscode
@@ -102,13 +103,13 @@ class Content(BaseArch):
                 targ.update(request.form)
                 self.session.add(targ)
                 self.session.commit()
-                self.ok('successfully updated.')
+                self.ok('update', 'successfully updated.')
                 return self._reroute('update')
             except IntegrityError as e:
-                self.error('integrity error.')
+                self.err('update', 'integrity error.')
                 rscode = 409
             except Exception as e:
-                self.ex(e)
+                self.ex('update', e)
             self.session.rollback()
         fauxd = self.__contentclass.form_auxdata_generate(self.session)
         return render_template(self._templ['update'], data = targ, form_auxd = fauxd), rscode
@@ -119,9 +120,10 @@ class Content(BaseArch):
             targ.delete()
             self.session.delete(targ)
             self.session.commit()
+            self.ok('delete', 'successfully deleted.')
         except Exception as e:
             self.session.rollback()
-            self.ex(e)
+            self.ex('delete', e)
         return self._reroute('delete')
 
 class Arch(BaseArch):

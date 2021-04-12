@@ -44,6 +44,7 @@ def test_case(client):
     rv = client.post('/personrec/insert', data=dict(name="jason",birthdate="1996-06-26"), follow_redirects=False)
     rv = client.post('/personrec/insert', data=dict(name="ting",birthdate="1996-10-02"), follow_redirects=True)
     assert rv.status_code == 200
+    assert b'NEW PERSON!' in rv.data
     assert b'jason, 1996-06-26' in rv.data
     assert b'ting, 1996-10-02' in rv.data
 

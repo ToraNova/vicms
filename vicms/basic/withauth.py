@@ -24,9 +24,10 @@ class Content(basic.Content):
             templates = {},
             reroutes = {},
             reroutes_kwarg = {},
+            rex_callback = {},
             routes_disabled = []
         ):
-        super().__init__(content_class, templates, reroutes, reroutes_kwarg, routes_disabled)
+        super().__init__(content_class, templates, reroutes, reroutes_kwarg, rex_callback, routes_disabled)
 
         for route, policy in access_policy.items():
             if policy:

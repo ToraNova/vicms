@@ -9,7 +9,7 @@ export FLASK_APP=basic
 flask run
 '''
 from datetime import datetime
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import login_user, LoginManager, current_user, logout_user, UserMixin, login_required
 from vicms import sqlorm
 from vicms.basic.withauth import Arch, Content
@@ -54,6 +54,10 @@ def create_app(test_config=None):
             'select_one':'person/select_one.html',
             'insert':'person/insert.html',
             'update':'person/update.html'
+        },
+        # example of altering a callback. when insert successfully, call this user func.
+        rex_callback = {
+            'insert': {'ok': lambda *args, **kwargs : flash('NEW PERSON!')},
         }
     )
     c2 = Content( PairRecord,
