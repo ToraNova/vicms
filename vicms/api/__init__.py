@@ -1,5 +1,6 @@
 '''
-basic cms, custom user db, no access control
+TODO: This arch is WIP.
+vicms-api: lightweight flexible REST-API routes for vicms.
 supports multiple content per arch
 '''
 
@@ -17,9 +18,6 @@ class Content(vicms.BaseContent, vicms.BaseArch):
 
     def __init__(self,
             content_class,
-            templates = {},
-            reroutes = {},
-            reroutes_kwarg = {},
             rex_callback = {},
             routes_disabled = []
         ):
@@ -28,21 +26,11 @@ class Content(vicms.BaseContent, vicms.BaseArch):
         '''
         # explicit constructor calls
         vicms.BaseContent.__init__(self, content_class, routes_disabled)
-        vicms.BaseArch.__init__(self, self.tablename, templates, reroutes, reroutes_kwarg, rex_callback, None)
-
-        #self._reroute = self._cms_reroute # little hack to allow cms arch behavior
-        self._default_tp('insert','insert.html')
-        self._default_tp('select','select.html')
-        self._default_tp('select_one','select_one.html')
-        self._default_tp('update','update.html')
-
-        self._default_rt('insert', 'vicms.select')
-        self._default_rt('update', 'vicms.select')
-        self._default_rt('delete', 'vicms.select')
-        # add in 'additional' reroute arg 'content', pass in tablename
-        self._reroute_mod('content',self.tablename)
+        vicms.BaseArch.__init__(self, self.tablename, {}, {}, {}, rex_callback, None)
+        # api has NO templates or REROUTES. just JSON response
 
     def select(self):
+        # TODO: render a json object
         res = super().select()
         return render_template(self._templ['select'], data = res)
 

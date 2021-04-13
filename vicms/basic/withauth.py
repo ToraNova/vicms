@@ -5,7 +5,8 @@ this can be used with viauth
 supports multiple content per arch
 '''
 from flask import render_template, request, redirect, abort, flash, url_for
-from vicms.basic import basic
+from vicms import Arch, cmroutes
+from vicms.basic import Content
 #from flask_login import current_user, login_required
 
 # late-binding vs. early binding
@@ -16,7 +17,7 @@ def accesspol_route(policy, route, oldfunc):
         return oldfunc(*args)
     return f
 
-class Content(basic.Content):
+class Content(Content):
 
     def __init__(self, content_class,
             access_policy = {},
@@ -31,19 +32,16 @@ class Content(basic.Content):
 
         for route, policy in access_policy.items():
             if policy:
-                self.__fctab[route] = accesspol_route(policy, route, self.__fctab[route])
+                setattr(self, route, accesspol_route(policy, route, getattr(self, route)) )
+                #self.__fctab[route] = accesspol_route(policy, route, self.__fctab[route])
 
         if default_ap:
             # for k in ('select', 'select_one', 'insert', 'update', 'delete')
-            for route in basic.cmroutes:
+            for route in cmroutes:
                 if route not in access_policy:
-                    self.__fctab[route] = accesspol_route(default_ap, route, self.__fctab[route])
-
-        # set login_required paths
-        #for k in ['select', 'select_one', 'insert', 'update', 'delete']:
-        #    if k not in login_not_required:
-        #        setattr(self, k, getattr(self, '_ViContent__'+k))
+                    setattr(self, route, accesspol_route(default_ap, route, getattr(self, route)))
+                    #self.__fctab[route] = accesspol_route(default_ap, route, self.__fctab[route])
 
 # nothing new added to arch, just a place holder to nicer importing
-class Arch(basic.Arch):
+class Arch(Arch):
     pass
