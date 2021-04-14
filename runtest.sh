@@ -4,6 +4,7 @@ tests=(\
 	examples/c1.py\
 	examples/b1.py\
 	examples/bwauth.py\
+	examples/api1.py\
 );
 for t in ${tests[@]}; do
 	pytest $t -s;

@@ -1,3 +1,4 @@
+import json, datetime
 from flask import abort
 from vicore import BaseArch, sqlorm
 from sqlalchemy.exc import IntegrityError
@@ -6,6 +7,19 @@ cmroutes = ('select', 'select_one', 'insert', 'update', 'delete')
 
 # place holder
 class ContentMixin(sqlorm.Core):
+
+    def as_json(self):
+        return json.dumps(self.as_dict())
+
+    def as_dict(self):
+        # dump all table into a dictionary
+        od = {c.name: (getattr(self, c.name)) for c in self.__table__.columns}
+
+        for k,v in od.items():
+            # convert dates to isoformat
+            if type(v) is datetime.datetime:
+                od[k] = v.isoformat()
+        return od
 
     def form_auxdata_generate(session):
         return []
