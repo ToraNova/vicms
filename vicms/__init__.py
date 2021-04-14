@@ -5,6 +5,14 @@ from sqlalchemy.exc import IntegrityError
 
 cmroutes = ('select', 'select_one', 'insert', 'update', 'delete')
 
+# late-binding vs. early binding
+# https://stackoverflow.com/questions/3431676/creating-functions-in-a-loop
+def route_rewrap(wrap, routef):
+    @wrap
+    def f(*args):
+        return routef(*args)
+    return f
+
 # place holder
 class ContentMixin(sqlorm.Core):
 

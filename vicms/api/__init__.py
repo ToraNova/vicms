@@ -6,14 +6,12 @@ supports multiple content per arch
 
 import json
 import vicms
-from flask import render_template, request, redirect, abort, flash, url_for
+from flask import request, abort, url_for
 from sqlalchemy.exc import IntegrityError
 
 '''
-basic.Content Arch
-templates: select, select_one, insert, update
-content_home: redirect to content_home after insert, update, delete
-set content='self' to redirect to the content's home (default behavior)
+api.Content Arch
+routes: select, select_one, insert, update, delete
 '''
 class Content(vicms.BaseContent):
 
@@ -24,7 +22,6 @@ class Content(vicms.BaseContent):
         '''initialize the content structure. a content structure is used by an arch to easily create API routes
         '''
         super().__init__(content_class, routes_disabled)
-        #vicms.BaseArch.__init__(self, self.tablename, {}, {}, {}, rex_callback, None)
         # api has NO templates or REROUTES. just JSON response
 
     def select(self):

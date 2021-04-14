@@ -30,6 +30,9 @@ def test_case(client):
     rv = client.get('/')
     assert b'vicms-api: test app' in rv.data
 
+    rv = client.get('/apitest/personrec/')
+    assert b'[]' == rv.data
+
     rv = client.get('/apitest/personrec/insert')
     assert rv.status_code == 400
 
@@ -55,3 +58,24 @@ def test_case(client):
 
     rv = client.get('/apitest/personrec/3')
     assert rv.status_code == 404
+
+    rv = client.get('/apitest/pairrec/')
+    assert b'[]' == rv.data
+
+    rv = client.post('/apitest/pairrec/insert', data=dict(aid="1",bid="2"))
+    assert rv.status_code == 401
+
+    rv = client.post('/apitest/pairrec/update/1', data=dict(aid="1",bid="2"))
+    assert rv.status_code == 401
+
+    rv = client.get('/apitest/pairrec/delete/1')
+    assert rv.status_code == 401
+
+    rv = client.get('/login/')
+    assert b'logged in' == rv.data
+
+    rv = client.post('/apitest/pairrec/insert', data=dict(aid="1",bid="2"))
+    assert rv.status_code == 200
+
+    rv = client.get('/apitest/pairrec/')
+    assert b'[{"id": 1, "aid": 1, "bid": 2}]' == rv.data
