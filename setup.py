@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-_version = '0.1.9'
+_version = '0.2.0'
 
 setup(
     name='vicms',
@@ -19,6 +19,7 @@ setup(
         'flask',
         'vicore',
         'sqlalchemy',
+        'python-magic',
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",

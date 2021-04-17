@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}{% endblock %}
+{% block header %}{% endblock %}
+
+{% block content %}
+<h1>uploaded images.</h1>
+<a href="{{ url_for('root') }}">back to index.</a>
+<ol>
+{% for d in data %}
+<li><a href="{{ url_for('vicms.select_one', content='watermark', id=d) }}">{{d}}</a><span> | </span><a href="{{ url_for('watermark', filename=d) }}">watermark</a><span> | </span><a href="{{ url_for('vicms.delete', content='watermark', id=d) }}">delete</a></li>
+{% endfor %}
+</ol>
+{% endblock %}

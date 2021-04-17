@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}watermarking{% endblock %}
+{% block header %}
+<style>
+.imcenter {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 80%;
+}
+.grid-container {
+	display: grid;
+	grid-gap: 25px 25px;
+}
+.cpanel {
+	grid-column-start: 1;
+	grid-column-end: 2;
+	border: 2px solid black;
+	padding: 10px;
+}
+.ipanel {
+	grid-column-start: 2;
+	grid-column-end: 3;
+	border: 2px dotted black;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="display:inline">image watermarking (2).</h1>
+<a href="{{ url_for('vicms.insert', content='watermark') }}">watermark a new image.</a>
+<a href="{{ url_for('vicms.select', content='watermark') }}">list uploaded images.</a>
+
+<div class="grid-container">
+<div class="cpanel">
+<p id='uinfo'>click on image to watermark.</p>
+<form>
+<label>watermarking text.</label><br>
+<input id='txtval' value='FOR AIA USE ONLY.' required><br>
+<label>text size.</label><br>
+<input id='txtsize' type='number' value='30' required><br>
+<label>watermark color.</label><br>
+<select id="txtcol">
+	<option value='red'>RED</option>
+	<option value='blue'>BLUE</option>
+	<option value='green'>GREEN</option>
+	<option value='yellow'>YELLOW</option>
+	<option value='black'>BLACK</option>
+	<option value='white'>WHITE</option>
+</select>
+</form>
+</div>
+
+<div class="ipanel">
+<canvas class='imcenter' id="user_canvas" height="600" width="1000"></canvas>
+</div>
+
+</div>
+<script>
+	const canvas = document.getElementById("user_canvas");
+
+	const img = new Image();
+	img.src = '{{ url_for('vicms.select_one', content='watermark', id=filename ) }}';
+	img.onload = function(){
+		var scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+		// get the top left position of the image
+		var x = (canvas.width / 2) - (img.width / 2) * scale;
+		var y = (canvas.height / 2) - (img.height / 2) * scale;
+		var ctx = canvas.getContext("2d");
+		ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+	};
+
+	canvas.addEventListener('click', function(e) {
+		const rect = canvas.getBoundingClientRect()
+		const x = e.clientX - rect.left
+		const y = e.clientY - rect.top
+
+		var szi = document.getElementById('txtsize').value;
+		var txt = document.getElementById('txtval').value;
+		var txc = document.getElementById('txtcol').value;
+		var ctx = canvas.getContext("2d");
+		ctx.font = `${szi}px Arial`;
+		ctx.fillStyle = txc;
+		ctx.fillText(txt, x, y);
+		//ctx.stokeText(txt, x, y); //nofill
+	});
+</script>
+{% endblock %}

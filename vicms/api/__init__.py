@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 api.Content Arch
 routes: select, select_one, insert, update, delete
 '''
-class Content(vicms.BaseContent):
+class SQLContent(vicms.SQLContent):
 
     def __init__(self,
             content_class,
@@ -64,6 +64,6 @@ class Content(vicms.BaseContent):
         except Exception as e:
             return '{"err":"%s"}'%(str(e)),400
 
-# nothing new added, repass to allow easy importing
+# this is roughly the same as vicms arch, didn't add anything new, just to simplify imports
 class Arch(vicms.Arch):
     pass

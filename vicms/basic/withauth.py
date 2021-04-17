@@ -4,12 +4,12 @@ used with flask-login
 this can be used with viauth
 supports multiple content per arch
 '''
+import vicms.basic as basic
 from flask import render_template, request, redirect, abort, flash, url_for
 from vicms import Arch, cmroutes, route_rewrap
-from vicms.basic import Content
 #from flask_login import current_user, login_required
 
-class Content(Content):
+class SQLContent(basic.SQLContent):
 
     def __init__(self, content_class,
             access_policy = {},
@@ -31,7 +31,3 @@ class Content(Content):
             for route in cmroutes:
                 if route not in access_policy:
                     setattr(self, route, route_rewrap(default_ap, getattr(self, route)))
-
-# nothing new added to arch, just a place holder to nicer importing
-class Arch(Arch):
-    pass

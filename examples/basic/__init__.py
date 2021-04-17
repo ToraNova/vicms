@@ -7,8 +7,8 @@ flask run
 '''
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, flash
-from vicms.basic import Arch, Content
-from vicms import ContentMixin, sqlorm
+from vicms.basic import Arch, SQLContent
+from vicms import SQLContentMixin, sqlorm
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -17,7 +17,7 @@ from sqlalchemy.ext.declarative import declarative_base
 # i.e., 's sqlorm.Base
 Base = declarative_base()
 
-class PersonRecord(ContentMixin, Base):
+class PersonRecord(SQLContentMixin, Base):
     '''an example content class that can be used by the cms library'''
     __tablename__ = "personrec"
     id = Column(Integer, primary_key = True)
@@ -49,7 +49,7 @@ class PersonRecord(ContentMixin, Base):
     def delete(self):
         pass
 
-class PairRecord(ContentMixin, Base):
+class PairRecord(SQLContentMixin, Base):
     __tablename__ = "pairrec"
     id = Column(Integer, primary_key = True)
     aid = Column(Integer, ForeignKey('personrec.id'), nullable=True)
@@ -100,7 +100,7 @@ def create_app(test_config=None):
         pass
 
     # define a place to find the templates and the content sqlorm class
-    c1 = Content( PersonRecord,
+    c1 = SQLContent( PersonRecord,
         templates = {
             'select':'person/select.html',
             'select_one':'person/select_one.html',
@@ -112,7 +112,7 @@ def create_app(test_config=None):
             'insert': {'ok': lambda *args, **kwargs : flash('NEW PERSON!')},
         },
     )
-    c2 = Content( PairRecord,
+    c2 = SQLContent( PairRecord,
         templates = {
             'select':'pair/select.html',
             'select_one':'pair/select_one.html',
@@ -120,17 +120,19 @@ def create_app(test_config=None):
             'update':'pair/update.html'
         },
         reroutes = {
-            'insert': 'test',
+            'insert': 'utest',
+            'delete': 'upass',
         },
         reroutes_kwarg = {
             'insert': {'var':'oaktree'}, # when we are rerouted after 'insert'
+            'delete': {'id': None}, # use None to allow passthrough, typically the ID of the inserted/updated/delete object
         },
     )
 
     # set url_prefix = '/' to have no url_prefix, leaving it empty will prefix with vicms
     session = sqlorm.connect(app.config['DBURI'], Base)
-    arch = Arch( session, [c1, c2], url_prefix = '/')
-    #bp = Arch( session, [c1, c2], url_prefix = '/').generate_blueprint()
+    arch = Arch( [c1, c2], session, url_prefix = '/')
+    #bp = Arch( [c1, c2], session, url_prefix = '/').generate_blueprint()
     #app.register_blueprint(bp)
     arch.init_app(app)
 
@@ -139,9 +141,13 @@ def create_app(test_config=None):
         return render_template('home.html')
 
     @app.route('/kwarg/<var>/')
-    def test(var):
+    def utest(var):
         pr = PairRecord.query.all()
         return render_template('pair/select.html', data=pr) + var
+
+    @app.route('/pass/<id>/')
+    def upass(id):
+        return '%s delete ok' % id
 
     # teardown context for the sqlorm session, init_app already handled it for us
     #@app.teardown_appcontext

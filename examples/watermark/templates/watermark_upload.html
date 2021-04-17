@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}watermarking{% endblock %}
+{% block header %}
+<style>
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>image watermarking (1).</h1>
+<p>upload a file for image watermarking.</p>
+<form method='post' enctype='multipart/form-data'>
+	<input name='ufile' type='file' required><button type='submit'>upload</button>
+</form>
+{% endblock %}

@@ -4,7 +4,7 @@ supports multiple content per arch and authentication
 '''
 
 import json
-from vicms.api import Content
+import vicms.api as api
 from vicms import Arch, cmroutes, route_rewrap
 from flask import request, redirect, abort
 from sqlalchemy.exc import IntegrityError
@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 '''
 api.withauth.Content Arch
 '''
-class Content(Content):
+class SQLContent(api.SQLContent):
 
     def __init__(self,
             content_class,
@@ -33,7 +33,3 @@ class Content(Content):
             for route in cmroutes:
                 if route not in access_policy:
                     setattr(self, route, route_rewrap(default_ap, getattr(self, route)))
-
-# nothing new added, repass to allow easy importing
-class Arch(Arch):
-    pass

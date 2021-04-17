@@ -15,4 +15,5 @@ pytest==6.2.3
 SQLAlchemy==1.4.6
 toml==0.10.2
 Werkzeug==1.0.1
+python-magic==0.4.22
 vicore

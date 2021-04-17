@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}{% endblock %}
+{% block header %}
+<style>
+.panel {
+	border: 2px dashed black;
+	padding: 10px;
+}
+</style>
+
+{% endblock %}
+
+{% block content %}
+<h1>welcome to esther's office tools.</h1>
+
+<div class="panel">
+<h3>watermarking</h3>
+<ol>
+<li><a href="{{ url_for('vicms.select',content='watermark') }}">image list.</a></li>
+<li><a href="{{ url_for('vicms.insert',content='watermark') }}">watermarking a new image.</a></li>
+</ol>
+</div>
+{% endblock %}
