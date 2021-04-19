@@ -46,7 +46,6 @@ class Arch(BaseArch):
             @app.teardown_appcontext
             def shutdown_session(exception=None):
                 self._session.remove()
-        return app
 
     def generate_blueprint(self):
         bp = self._init_bp()
