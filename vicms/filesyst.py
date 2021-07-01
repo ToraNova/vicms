@@ -5,6 +5,7 @@ import os, errno, uuid
 from vicms.abst import BaseContent
 from flask import send_file, send_from_directory, current_app
 from werkzeug.utils import secure_filename
+from datetime import datetime, timezone
 illegal_seq =   ('*','..','&','%','$','>','<','|','!','?','`','\'','\"','=','+','@',';','{','}','#','//','\\\\',',',' ',':',';')
 KBCONST = 1024
 MBCONST = 1048576
@@ -55,7 +56,7 @@ class FileContent(BaseContent):
 
     def listdir(self):
         res = [f for f in os.listdir(self.savepath)\
-                if os.path.isfile(os.path.join(self.savepath, f))]
+                if os.path.isfile(self.get_syspath(f))]
         return res
 
     def download(self, filename, **kwargs):
@@ -108,6 +109,49 @@ class FileContent(BaseContent):
             if e.errno != errno.ENOENT:
                 raise
         return ffname
+
+    def get_syspath(self, filename):
+        return os.path.join(self.savepath, filename)
+
+    def get_filesize(self, filename):
+        fpath = self.get_syspath(filename)
+        if not os.path.isfile(fpath):
+            return None
+        return os.stat(fpath).st_size
+
+    def get_filetime(self, filename, action='access', result = 'string', tz = timezone.utc, strformat = '%b %d %Y %H:%M'):
+        fpath = self.get_syspath(filename)
+        if not os.path.isfile(fpath):
+            return None
+        if action == 'create':
+            out = os.stat(fpath).st_ctime
+        elif action == 'modify':
+            out = os.stat(fpath).st_mtime
+        else:
+            out = os.stat(fpath).st_atime
+        if result == 'timestamp':
+            return out
+
+        out = datetime.fromtimestamp(out, tz=tz)
+        if result == 'datetime':
+            return out
+        else:
+            return out.strftime(strformat)
+
+    def get_fileownuid(self, filename, group=False):
+        fpath = self.get_syspath(filename)
+        if not os.path.isfile(fpath):
+            return None
+        if group:
+            return os.stat(fpath).st_gid
+        else:
+            return os.stat(fpath).st_uid
+
+    def get_fileamode(self, filename):
+        fpath = self.get_syspath(filename)
+        if not os.path.isfile(fpath):
+            return None
+        return os.stat(fpath).st_mode
 
 def ensure_random_uuid(existing):
     p = 10
